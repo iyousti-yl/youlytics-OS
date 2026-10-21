@@ -4,15 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agentic OS overview</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-:root{--ink:#102033;--paper:#f6f8fa;--surface:#ffffff;--line:#d5dde5;--muted:#5b6b7b;--accent:#0b7a75;--accent-2:#e0a526;
-  --f-display:"Manrope","Segoe UI",system-ui,sans-serif;--f-body:"Source Serif 4",Georgia,serif;--f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+:root{--ink:#142033;--paper:#F4F6FA;--surface:#ffffff;--line:#D3DAE5;--muted:#4F5B6E;--accent:#1F3B70;--accent-2:#D9962B;
+  --f-display:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
   --s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--radius:8px}
 body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 var(--f-body)}
 main{max-width:960px;margin:0 auto;padding:var(--s7) var(--s4);display:grid;gap:var(--s6)}
-.brand{font:800 18px var(--f-display)}
-h1{font:800 48px/1.05 var(--f-display);margin:0;max-width:18ch}
+.brand{font:600 20px var(--f-display);letter-spacing:-.02em;color:var(--accent)}
+h1{font:600 48px/1.05 var(--f-display);margin:0;max-width:18ch}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--s3)}
 .cell{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--s4)}
 .cell b{font:700 20px var(--f-display);display:block}
@@ -23,7 +23,7 @@ p{margin:0;max-width:65ch}
 </head>
 <body>
 <main>
-  <div class="brand">youlytics</div>
+  <div class="brand">you<span style="font-weight:400">lytics</span></div>
   <h1>One workspace for knowledge, business and life.</h1>
   <p>The OS follows the ARMS framework: Skills, Routines, Memory and Apps, three levels each. Two levels are built so far, outlined below.</p>
   <div class="grid">

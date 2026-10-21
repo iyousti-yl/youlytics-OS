@@ -1,1 +1,1 @@
-Sample one-pager built with /brand from the draft brand book; no images.
+Sample one-pager built with /brand from the youlytics brand book (Sapphire Steady); no images.
