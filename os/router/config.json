@@ -1,8 +1,20 @@
 {
   "enabled": true,
   "log": true,
-  "router_model": "typesafe/jev-1.14",
-  "endpoint": "https://openrouter.ai/api/alpha/decisions",
+  "provider": "openai",
+  "openai": {
+    "model": "gpt-5-nano",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "extra": {
+      "reasoning_effort": "minimal"
+    },
+    "usd_per_million_input": 0.05,
+    "usd_per_million_output": 0.4
+  },
+  "jev": {
+    "model": "typesafe/jev-1.14",
+    "endpoint": "https://openrouter.ai/api/alpha/decisions"
+  },
   "timeout_seconds": 3,
   "default_model": "sonnet",
   "default_effort": "medium",

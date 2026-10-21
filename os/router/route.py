@@ -10,12 +10,13 @@
 Order of decisions:
   1. A prompt that starts with /skill uses the model pinned in that skill's
      SKILL.md (`model:` in the frontmatter). Free and instant.
-  2. Otherwise Jev (TypeSafe, via OpenRouter's decisions API) picks the model
-     and effort.
+  2. Otherwise the provider in config.json picks the model and effort:
+     "openai": a small OpenAI model (OPENAI_API_KEY, pay-as-you-go API billing)
+     "jev":    Jev from TypeSafe via OpenRouter's decisions API (OPENROUTER_API_KEY)
   3. Routing off, no key, or any error: the defaults in config.json.
 
-The OpenRouter key is read from the OPENROUTER_API_KEY environment variable,
-then the repo's .env file, then ~/.config/openrouter/key. It is never printed.
+Keys are read from the environment, then the repo's .env file, then
+~/.config/openai/key or ~/.config/openrouter/key. They are never printed.
 """
 import json
 import os
@@ -42,21 +43,67 @@ def save_config(cfg):
     CONFIG.write_text(json.dumps(cfg, indent=2) + "\n")
 
 
-def api_key():
-    key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+KEYS = {"openai": ("OPENAI_API_KEY", "openai"), "jev": ("OPENROUTER_API_KEY", "openrouter")}
+
+
+def api_key(provider):
+    var, folder = KEYS[provider]
+    key = os.environ.get(var, "").strip()
     if key:
         return key
     env = ROOT / ".env"
     if env.is_file():
         for line in env.read_text().splitlines():
-            if line.strip().startswith("OPENROUTER_API_KEY="):
+            if line.strip().startswith(var + "="):
                 key = line.split("=", 1)[1].strip().strip('"').strip("'")
                 if key:
                     return key
-    keyfile = Path.home() / ".config" / "openrouter" / "key"
+    keyfile = Path.home() / ".config" / folder / "key"
     if keyfile.is_file():
         return keyfile.read_text().strip()
     return ""
+
+
+def post_json(url, body, key, timeout):
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(body).encode(),
+        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return json.loads(resp.read())
+
+
+def check_pick(model, effort, cfg):
+    if model not in cfg["models"]:
+        raise ValueError(f"router returned an unknown model: {model}")
+    if effort not in cfg["efforts"]:
+        raise ValueError(f"router returned an unknown effort: {effort}")
+
+
+def ask_openai(prompt, cfg, key):
+    oc = cfg["openai"]
+    options = "\n".join(f"- {name}: {desc}" for name, desc in cfg["models"].items())
+    system = (
+        "You route prompts for Claude Code, an AI work assistant. Pick the smallest model that will do "
+        "the prompt well, and how much reasoning effort it needs.\nModels:\n" + options +
+        "\nEfforts: " + ", ".join(cfg["efforts"]) +
+        '\nReply with JSON only: {"model": "<model>", "effort": "<effort>"}'
+    )
+    body = {
+        "model": oc["model"],
+        "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt[:12000]}],
+        "response_format": {"type": "json_object"},
+        **oc.get("extra", {}),
+    }
+    data = post_json(oc["endpoint"], body, key, cfg["timeout_seconds"])
+    pick = json.loads(data["choices"][0]["message"]["content"])
+    model, effort = pick.get("model"), pick.get("effort")
+    check_pick(model, effort, cfg)
+    usage = data.get("usage") or {}
+    cost = (usage.get("prompt_tokens", 0) * oc.get("usd_per_million_input", 0)
+            + usage.get("completion_tokens", 0) * oc.get("usd_per_million_output", 0)) / 1_000_000
+    return {"model": model, "effort": effort, "cost": round(cost, 8)}
 
 
 def pinned(prompt, cfg):
@@ -78,7 +125,7 @@ def pinned(prompt, cfg):
 
 def ask_jev(prompt, cfg, key):
     body = {
-        "model": cfg["router_model"],
+        "model": cfg["jev"]["model"],
         "state": ["A user prompt for Claude Code, an AI coding and work assistant:", prompt[:12000]],
         "questions": {
             "model": {
@@ -97,22 +144,15 @@ def ask_jev(prompt, cfg, key):
             },
         },
     }
-    req = urllib.request.Request(
-        cfg["endpoint"],
-        data=json.dumps(body).encode(),
-        headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req, timeout=cfg["timeout_seconds"]) as resp:
-        data = json.loads(resp.read())
+    data = post_json(cfg["jev"]["endpoint"], body, key, cfg["timeout_seconds"])
     answers = data["answers"]
-    model = answers["model"]["choice"]
-    if model not in cfg["models"]:
-        raise ValueError(f"router returned an unknown model: {model}")
     efforts = cfg["efforts"]
     idx = min(len(efforts) - 1, max(0, round(float(answers["effort"]["score"]))))
+    model, effort = answers["model"]["choice"], efforts[idx]
+    check_pick(model, effort, cfg)
     return {
         "model": model,
-        "effort": efforts[idx],
+        "effort": effort,
         "confidence": answers["model"].get("confidence"),
         "cost": (data.get("usage") or {}).get("cost", 0),
     }
@@ -128,13 +168,15 @@ def route(prompt):
     elif not cfg.get("enabled", True):
         pick["source"] = "off"
     else:
-        key = api_key()
+        provider = cfg.get("provider", "openai")
+        key = api_key(provider)
         if not key:
             pick["source"] = "no-key"
         else:
+            ask = ask_openai if provider == "openai" else ask_jev
             try:
-                pick.update(ask_jev(prompt, cfg, key), source="jev")
-            except (urllib.error.URLError, TimeoutError, KeyError, ValueError, TypeError) as e:
+                pick.update(ask(prompt, cfg, key), source=provider)
+            except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError, TypeError) as e:
                 pick.update(source="error", error=type(e).__name__ + ": " + str(e)[:200])
     pick["ms"] = round((time.monotonic() - started) * 1000)
     if cfg.get("log", True):
@@ -148,14 +190,14 @@ def stats():
     if not LOG.is_file():
         return {"calls": 0}
     rows = [json.loads(l) for l in LOG.read_text().splitlines() if l.strip()]
-    jev = [r for r in rows if r.get("source") == "jev"]
+    jev = [r for r in rows if r.get("source") in KEYS]
     by_model = {}
     for r in rows:
         by_model[r["model"]] = by_model.get(r["model"], 0) + 1
     return {
         "calls": len(rows),
-        "jev_calls": len(jev),
-        "avg_jev_ms": round(sum(r["ms"] for r in jev) / len(jev)) if jev else None,
+        "router_calls": len(jev),
+        "avg_router_ms": round(sum(r["ms"] for r in jev) / len(jev)) if jev else None,
         "total_cost_usd": round(sum(r.get("cost") or 0 for r in rows), 6),
         "by_model": by_model,
         "by_source": {s: sum(1 for r in rows if r.get("source") == s) for s in sorted({r.get("source") for r in rows})},
@@ -175,7 +217,9 @@ def main(argv):
         return 0
     if cmd == "status":
         cfg = load_config()
-        print(f"Routing is {'on' if cfg.get('enabled', True) else 'off'}; key {'found' if api_key() else 'not found'}.")
+        provider = cfg.get("provider", "openai")
+        print(f"Routing is {'on' if cfg.get('enabled', True) else 'off'}; provider {provider}; "
+              f"key {'found' if api_key(provider) else 'not found'}.")
         return 0
     if cmd == "stats":
         print(json.dumps(stats(), indent=2))
@@ -183,7 +227,7 @@ def main(argv):
     if cmd == "--test":
         pick = route("Fix the spelling in this sentence: Teh data is redy.")
         print(json.dumps(pick, indent=2))
-        return 0 if pick["source"] == "jev" else 2
+        return 0 if pick["source"] in KEYS else 2
     as_json = cmd == "--json"
     prompt = " ".join(argv[1:] if as_json else argv)
     pick = route(prompt)

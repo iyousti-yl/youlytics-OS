@@ -16,7 +16,7 @@ Each department has one router file that says what lives in each of its folders.
 - `artifacts/` holds every deck, infographic and PDF, with `artifacts/index.html` as the inbox (newest first).
 - `brand/brand-book.html` holds colours, fonts, spacing and logo rules. Every artifact is built from it.
 - `.claude/skills/` holds the skills. Current ones: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`.
-- `os/router/` picks the model and effort for each prompt (pinned skills first, then Jev). `os/ask "prompt"` starts a chat on the routed model.
+- `os/router/` picks the model and effort for each prompt (pinned skills first, then a small OpenAI model, or Jev if configured). `os/ask "prompt"` starts a chat on the routed model.
 - `os/` holds the local dashboard (`python3 os/server.py`) and the reports skills write there.
 - `memory/` holds one file per memory subject. `MEMORY.md` is its one-line-per-file catalog.
 
