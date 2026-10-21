@@ -4,9 +4,12 @@ Source plan: RoboNuggets "ARMS Agentic OS v2" guide. Visual home: https://claude
 
 | Level | Status | Where |
 |---|---|---|
-| M1 Long-term memory | built | `CLAUDE.md`, `MEMORY.md`, department router files, `/business-data` |
+| M1 Long-term memory | built | `AGENTS.md` (shared with Codex), `CLAUDE.md`, `MEMORY.md`, department router files, `/business-data` |
 | Brand | chosen | Direction A "Sapphire Steady" in `brand/brand-book.html` |
 | S1 Skill types | built | `/tone` + `/wildcard` (database), `/brand` (artifact), `/clean-up` (self-triggered, `os/server.py`) |
+| S2 Model routing | built | `os/router/route.py`, `os/ask`, dashboard auto option; pins in skill frontmatter; router on Claude plan, Jev or OpenAI; optional Codex target |
 | All other levels | not started | |
 
-Suggested next: S2 model routing (small skills already pin `model: haiku`), then R1 passive routines.
+Model pins: /grammar, /wildcard, /clean-up, /business-data → haiku, low effort. /tone, /brand → sonnet. Everything else → the router in `os/router/config.json` picks (provider `claude` default, `jev` or `openai` optional; `use_codex` adds Codex on the ChatGPT plan).
+
+Suggested next: R1 passive routines, then S3 self-improving skills (pairs with /tone's learning).

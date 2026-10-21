@@ -3,3 +3,6 @@
 *.key
 secrets/
 os/reports/*.log
+os/router/log.jsonl
+__pycache__/
+*.pyc

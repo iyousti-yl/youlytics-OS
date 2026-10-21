@@ -2,8 +2,8 @@
   "clean-up": {
     "label": "Clean up my computer",
     "prompt": "/clean-up",
-    "default_model": "haiku",
-    "default_effort": "low",
+    "default_model": "auto",
+    "default_effort": "auto",
     "allowed_tools": [
       "Read", "Glob", "Grep",
       "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)",

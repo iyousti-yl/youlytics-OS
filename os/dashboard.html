@@ -23,6 +23,13 @@ ul{margin:0;padding-left:1.2em} a{color:var(--accent)}
 <main>
   <h1>youlytics-OS dashboard</h1>
   <p>Each button runs a skill in the background with <code>claude -p</code>. Pick the model and effort next to it.</p>
+  <section class="card">
+    <h2>Model routing</h2>
+    <div class="row">
+      <label><input type="checkbox" id="router-on"> Let the router pick the model when a button is set to auto</label>
+    </div>
+    <div class="st" id="router-stats">No routing calls yet.</div>
+  </section>
   <div id="buttons"></div>
   <section class="card"><h2>Latest reports</h2><ul id="reports"><li>None yet.</li></ul></section>
 </main>
@@ -38,8 +45,8 @@ async function refresh(){
         <h2>${b.label}</h2>
         <div class="row">
           <button class="run" type="button">Run /${k}</button>
-          <label>Model <select class="m">${opt(["haiku","sonnet","opus"], b.default_model)}</select></label>
-          <label>Effort <select class="e">${opt(["low","medium","high","xhigh","max"], b.default_effort)}</select></label>
+          <label>Model <select class="m">${opt(["auto","haiku","sonnet","opus","codex"], b.default_model)}</select></label>
+          <label>Effort <select class="e">${opt(["auto","low","medium","high","xhigh","max"], b.default_effort)}</select></label>
         </div>
         <div class="st">Not run yet</div>
       </section>`).join("");
@@ -56,11 +63,18 @@ async function refresh(){
     c.querySelector(".run").disabled = r?.state === "running";
     if (!r) return;
     st.className = "st " + r.state;
-    st.textContent = r.state === "running" ? `Running on ${r.model}, ${r.effort} effort…`
+    st.textContent = r.state === "running" ? `Running on ${r.model}, ${r.effort} effort${r.routed ? " (" + r.routed + ")" : ""}…`
       : `${r.state === "done" ? "Finished" : "Failed"} in ${r.seconds}s on ${r.model}. Log: ${r.log}`;
   });
+  const rs = s.router.stats || {};
+  $("#router-on").checked = s.router.enabled;
+  $("#router-stats").textContent = rs.calls ? `${rs.calls} picks · ${rs.router_calls} by the router${rs.avg_router_ms ? ", avg " + rs.avg_router_ms + " ms" : ""} · $${rs.total_cost_usd} total · ` + Object.entries(rs.by_model).map(([m,n]) => `${m} ${Math.round(100*n/rs.calls)}%`).join(", ") : "No routing calls yet.";
   $("#reports").innerHTML = s.reports.length ? s.reports.map(r => `<li><a href="/reports/${encodeURIComponent(r.name)}" target="_blank">${r.name}</a> <span class="st">${r.modified}</span></li>`).join("") : "<li>None yet.</li>";
 }
+$("#router-on").addEventListener("change", async e => {
+  await fetch("/api/router", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({enabled: e.target.checked})});
+  refresh();
+});
 refresh(); setInterval(refresh, 3000);
 </script>
 </body>
