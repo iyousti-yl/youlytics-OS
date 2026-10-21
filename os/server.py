@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OS_DIR = ROOT / "os"
 REPORTS = OS_DIR / "reports"
 HOST, PORT = "127.0.0.1", 8765
-MODELS = {"haiku", "sonnet", "opus", "auto"}
+MODELS = {"haiku", "sonnet", "opus", "codex", "auto"}
 EFFORTS = {"low", "medium", "high", "xhigh", "max", "auto"}
 ROUTER = OS_DIR / "router"
 
@@ -48,14 +48,17 @@ def run_skill(skill, cfg, model, effort):
             runs[skill].update(model=model, effort=effort, routed=source)
     stamp = datetime.now().strftime("%Y-%m-%d-%H%M")
     log = REPORTS / f"{skill}-{stamp}.log"
-    cmd = ["claude", "-p", cfg["prompt"], "--model", model, "--effort", effort,
-           "--allowedTools", *cfg.get("allowed_tools", [])]
+    if model == "codex":  # Codex CLI on the ChatGPT plan, allowed to write only inside this workspace
+        cmd = ["codex", "exec", "-c", f"model_reasoning_effort={effort}", "--sandbox", "workspace-write", cfg["prompt"]]
+    else:
+        cmd = ["claude", "-p", cfg["prompt"], "--model", model, "--effort", effort,
+               "--allowedTools", *cfg.get("allowed_tools", [])]
     started = time.time()
     with open(log, "w") as out:
         try:
             code = subprocess.run(cmd, cwd=ROOT, stdout=out, stderr=subprocess.STDOUT, timeout=1800).returncode
         except FileNotFoundError:
-            out.write("The claude command wasn't found. Install Claude Code and try again.\n")
+            out.write(f"The {cmd[0]} command wasn't found. Install it and try again.\n")
             code = 127
         except subprocess.TimeoutExpired:
             out.write("Stopped after 30 minutes.\n")

@@ -1,7 +1,16 @@
 {
   "enabled": true,
   "log": true,
-  "provider": "openai",
+  "provider": "claude",
+  "use_codex": false,
+  "claude": {
+    "model": "haiku",
+    "timeout_seconds": 45
+  },
+  "jev": {
+    "model": "typesafe/jev-1.14",
+    "endpoint": "https://openrouter.ai/api/alpha/decisions"
+  },
   "openai": {
     "model": "gpt-5-nano",
     "endpoint": "https://api.openai.com/v1/chat/completions",
@@ -11,21 +20,24 @@
     "usd_per_million_input": 0.05,
     "usd_per_million_output": 0.4
   },
-  "jev": {
-    "model": "typesafe/jev-1.14",
-    "endpoint": "https://openrouter.ai/api/alpha/decisions"
-  },
   "timeout_seconds": 3,
   "default_model": "sonnet",
   "default_effort": "medium",
   "models": {
     "haiku": "Simple, fixed-step or short tasks: spelling and grammar, formatting, lookups, renaming, short summaries, small routine file edits.",
     "sonnet": "Everyday work: drafting and editing, analysis, multi-step coding, research across a few files, building a deck or page.",
-    "opus": "Hard or high-stakes work: architecture and design decisions, complex debugging, long strategy documents, ambiguous multi-part problems."
+    "opus": "Hard or high-stakes work: architecture and design decisions, complex debugging, long strategy documents, ambiguous multi-part problems.",
+    "codex": "Self-contained coding work that doesn't need Issam's skills: writing, fixing or refactoring code and scripts, running tests, small apps and tools. Runs on Codex with Issam's ChatGPT plan."
   },
   "efforts": [
     "low",
     "medium",
     "high"
-  ]
+  ],
+  "agents": {
+    "haiku": "claude",
+    "sonnet": "claude",
+    "opus": "claude",
+    "codex": "codex"
+  }
 }

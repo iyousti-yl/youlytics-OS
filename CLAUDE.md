@@ -1,31 +1,13 @@
-# youlytics-OS: map
+# youlytics-OS: map for Claude Code
 
-This file is a map, not a rulebook. Start here, then open only the file you need.
-Check the memory catalog before searching: @MEMORY.md
+The map and the rules shared with Codex: @AGENTS.md
+The memory catalog: @MEMORY.md
 
-## Departments
-Each department has one router file that says what lives in each of its folders.
-
-| Department | Router | What it covers |
-|---|---|---|
-| Knowledge | [knowledge/knowledge.md](knowledge/knowledge.md) | Notes, reading, references, ideas |
-| Business | [business/business.md](business/business.md) | Clients, offers, content, finance, operations |
-| Life | [life/life.md](life/life.md) | Health, home, goals, personal admin |
-
-## Other places
-- `artifacts/` holds every deck, infographic and PDF, with `artifacts/index.html` as the inbox (newest first).
-- `brand/brand-book.html` holds colours, fonts, spacing and logo rules. Every artifact is built from it.
-- `.claude/skills/` holds the skills. Current ones: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`.
-- `os/router/` picks the model and effort for each prompt (pinned skills first, then a small OpenAI model, or Jev if configured). `os/ask "prompt"` starts a chat on the routed model.
-- `os/` holds the local dashboard (`python3 os/server.py`) and the reports skills write there.
-- `memory/` holds one file per memory subject. `MEMORY.md` is its one-line-per-file catalog.
-
-## Working rules
-- Find things through this map and the router files. Don't search the whole workspace unless the map has no answer, and if it doesn't, add the missing line to the right router.
-- Keep files plain text (Markdown, HTML, JSON). No vector database.
-- Every image gets a text description: save the prompt that made it next to it as `<image>.txt`.
-- Never ask for API keys in chat. Keys live in `.env` (gitignored).
+## Claude Code only
+- Skills: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar` in `.claude/skills/`.
 - Every new fixed-step skill gets `model: haiku` and `effort: low` in its frontmatter. Use sonnet or opus only when the skill needs judgement.
+- `os/router/` picks the agent, model and effort for each new prompt: pinned skills first, then the router set in `os/router/config.json` (Claude Haiku on the Claude plan, or Jev). With `use_codex` on, self-contained coding work can go to Codex on Issam's ChatGPT plan. `os/ask "prompt"` starts the chat on the pick.
+- `os/server.py` runs the local dashboard; skills write their reports to `os/reports/`.
 
 ## When a chat compacts, always keep
 - Decisions made and the reason for each

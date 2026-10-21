@@ -11,8 +11,10 @@ Order of decisions:
   1. A prompt that starts with /skill uses the model pinned in that skill's
      SKILL.md (`model:` in the frontmatter). Free and instant.
   2. Otherwise the provider in config.json picks the model and effort:
+     "claude": Claude Haiku via `claude -p`, on your Claude plan (no key, a few seconds)
+     "jev":    Jev from TypeSafe via OpenRouter's decisions API (OPENROUTER_API_KEY, under a second)
      "openai": a small OpenAI model (OPENAI_API_KEY, pay-as-you-go API billing)
-     "jev":    Jev from TypeSafe via OpenRouter's decisions API (OPENROUTER_API_KEY)
+     With "use_codex": true, "codex" (Codex CLI on the ChatGPT plan) is one of the choices.
   3. Routing off, no key, or any error: the defaults in config.json.
 
 Keys are read from the environment, then the repo's .env file, then
@@ -21,7 +23,9 @@ Keys are read from the environment, then the repo's .env file, then
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -44,6 +48,7 @@ def save_config(cfg):
 
 
 KEYS = {"openai": ("OPENAI_API_KEY", "openai"), "jev": ("OPENROUTER_API_KEY", "openrouter")}
+PROVIDERS = ("claude", "jev", "openai")
 
 
 def api_key(provider):
@@ -74,8 +79,13 @@ def post_json(url, body, key, timeout):
         return json.loads(resp.read())
 
 
+def targets(cfg):
+    """The models the router may choose from."""
+    return {k: v for k, v in cfg["models"].items() if k != "codex" or cfg.get("use_codex")}
+
+
 def check_pick(model, effort, cfg):
-    if model not in cfg["models"]:
+    if model not in targets(cfg):
         raise ValueError(f"router returned an unknown model: {model}")
     if effort not in cfg["efforts"]:
         raise ValueError(f"router returned an unknown effort: {effort}")
@@ -83,13 +93,7 @@ def check_pick(model, effort, cfg):
 
 def ask_openai(prompt, cfg, key):
     oc = cfg["openai"]
-    options = "\n".join(f"- {name}: {desc}" for name, desc in cfg["models"].items())
-    system = (
-        "You route prompts for Claude Code, an AI work assistant. Pick the smallest model that will do "
-        "the prompt well, and how much reasoning effort it needs.\nModels:\n" + options +
-        "\nEfforts: " + ", ".join(cfg["efforts"]) +
-        '\nReply with JSON only: {"model": "<model>", "effort": "<effort>"}'
-    )
+    system = instructions(cfg)
     body = {
         "model": oc["model"],
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt[:12000]}],
@@ -104,6 +108,34 @@ def ask_openai(prompt, cfg, key):
     cost = (usage.get("prompt_tokens", 0) * oc.get("usd_per_million_input", 0)
             + usage.get("completion_tokens", 0) * oc.get("usd_per_million_output", 0)) / 1_000_000
     return {"model": model, "effort": effort, "cost": round(cost, 8)}
+
+
+def instructions(cfg):
+    options = "\n".join(f"- {name}: {desc}" for name, desc in targets(cfg).items())
+    return (
+        "You route prompts for an AI work assistant (Claude Code or Codex). Pick the smallest model that will do "
+        "the prompt well, and how much reasoning effort it needs.\nModels:\n" + options +
+        "\nEfforts: " + ", ".join(cfg["efforts"]) +
+        '\nReply with JSON only: {"model": "<model>", "effort": "<effort>"}'
+    )
+
+
+def ask_claude(prompt, cfg, _key):
+    """Route with Claude Haiku in headless mode, billed to the Claude plan."""
+    cc = cfg.get("claude", {})
+    text = instructions(cfg) + "\n\nThe prompt to route:\n<prompt>\n" + prompt[:12000] + "\n</prompt>"
+    out = subprocess.run(
+        ["claude", "-p", text, "--model", cc.get("model", "haiku"), "--output-format", "json",
+         "--max-turns", "1"],
+        # Run outside the repo so no CLAUDE.md is loaded into the routing call.
+        cwd=tempfile.gettempdir(), stdin=subprocess.DEVNULL, capture_output=True, text=True,
+        timeout=cc.get("timeout_seconds", 45),
+    )
+    data = json.loads(out.stdout)
+    pick = json.loads(re.search(r"\{.*\}", data["result"], re.S).group(0))
+    model, effort = pick.get("model"), pick.get("effort")
+    check_pick(model, effort, cfg)
+    return {"model": model, "effort": effort, "cost": data.get("total_cost_usd", 0), "billed": "claude plan"}
 
 
 def pinned(prompt, cfg):
@@ -126,12 +158,12 @@ def pinned(prompt, cfg):
 def ask_jev(prompt, cfg, key):
     body = {
         "model": cfg["jev"]["model"],
-        "state": ["A user prompt for Claude Code, an AI coding and work assistant:", prompt[:12000]],
+        "state": ["A prompt for an AI work assistant (Claude Code or Codex):", prompt[:12000]],
         "questions": {
             "model": {
                 "type": "choice",
                 "instructions": "Which is the smallest model that will do this prompt well?",
-                "criteria": cfg["models"],
+                "criteria": targets(cfg),
             },
             "effort": {
                 "type": "score",
@@ -168,15 +200,16 @@ def route(prompt):
     elif not cfg.get("enabled", True):
         pick["source"] = "off"
     else:
-        provider = cfg.get("provider", "openai")
-        key = api_key(provider)
+        provider = cfg.get("provider", "claude")
+        key = api_key(provider) if provider in KEYS else "not needed"
         if not key:
             pick["source"] = "no-key"
         else:
-            ask = ask_openai if provider == "openai" else ask_jev
+            ask = {"claude": ask_claude, "jev": ask_jev, "openai": ask_openai}[provider]
             try:
                 pick.update(ask(prompt, cfg, key), source=provider)
-            except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError, TypeError) as e:
+            except (urllib.error.URLError, TimeoutError, subprocess.TimeoutExpired, FileNotFoundError,
+                    KeyError, IndexError, AttributeError, ValueError, TypeError) as e:
                 pick.update(source="error", error=type(e).__name__ + ": " + str(e)[:200])
     pick["ms"] = round((time.monotonic() - started) * 1000)
     if cfg.get("log", True):
@@ -190,7 +223,7 @@ def stats():
     if not LOG.is_file():
         return {"calls": 0}
     rows = [json.loads(l) for l in LOG.read_text().splitlines() if l.strip()]
-    jev = [r for r in rows if r.get("source") in KEYS]
+    jev = [r for r in rows if r.get("source") in PROVIDERS]
     by_model = {}
     for r in rows:
         by_model[r["model"]] = by_model.get(r["model"], 0) + 1
@@ -217,9 +250,10 @@ def main(argv):
         return 0
     if cmd == "status":
         cfg = load_config()
-        provider = cfg.get("provider", "openai")
-        print(f"Routing is {'on' if cfg.get('enabled', True) else 'off'}; provider {provider}; "
-              f"key {'found' if api_key(provider) else 'not found'}.")
+        provider = cfg.get("provider", "claude")
+        key = ("not needed" if provider not in KEYS else "found" if api_key(provider) else "not found")
+        print(f"Routing is {'on' if cfg.get('enabled', True) else 'off'}; provider {provider}; key {key}; "
+              f"Codex {'on' if cfg.get('use_codex') else 'off'}.")
         return 0
     if cmd == "stats":
         print(json.dumps(stats(), indent=2))
@@ -227,7 +261,7 @@ def main(argv):
     if cmd == "--test":
         pick = route("Fix the spelling in this sentence: Teh data is redy.")
         print(json.dumps(pick, indent=2))
-        return 0 if pick["source"] in KEYS else 2
+        return 0 if pick["source"] in PROVIDERS else 2
     as_json = cmd == "--json"
     prompt = " ".join(argv[1:] if as_json else argv)
     pick = route(prompt)
