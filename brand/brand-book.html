@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics brand book</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* DRAFT: placeholder values chosen by Claude. Replace with the real brand, then remove this line. */
+:root{
+  /* colour */
+  --ink:#102033; --paper:#f6f8fa; --surface:#ffffff; --line:#d5dde5; --muted:#5b6b7b;
+  --accent:#0b7a75; --accent-2:#e0a526; --danger:#c0392b;
+  /* type */
+  --f-display:"Manrope", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Source Serif 4", Georgia, serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --t-xs:12px; --t-sm:14px; --t-md:17px; --t-lg:24px; --t-xl:36px; --t-xxl:56px;
+  /* spacing (4px base) */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --radius:8px;
+}
+body{margin:0;background:var(--paper);color:var(--ink);font:var(--t-md)/1.6 var(--f-body)}
+main{max-width:920px;margin:0 auto;padding:var(--s7) var(--s4);display:grid;gap:var(--s7)}
+h1,h2{font-family:var(--f-display);margin:0;line-height:1.1}
+h1{font-size:var(--t-xxl);font-weight:800}
+h2{font-size:var(--t-lg);font-weight:700;margin-bottom:var(--s4)}
+.draft{background:var(--accent-2);color:var(--ink);font:500 var(--t-sm) var(--f-mono);padding:var(--s2) var(--s3);border-radius:var(--radius)}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:var(--s3)}
+.sw{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--surface);font:var(--t-xs) var(--f-mono)}
+.sw div{height:72px}
+.sw p{margin:0;padding:var(--s2)}
+.type p{margin:0 0 var(--s3)}
+ul{margin:0;padding-left:1.2em}
+code{font-family:var(--f-mono);font-size:.9em}
+</style>
+</head>
+<body>
+<main>
+  <p class="draft">DRAFT. These are placeholder choices. Tell Claude your real colours, fonts and logo, and it will update this page.</p>
+  <header><h1>youlytics</h1><p>Brand book. Every artifact copies the <code>:root</code> tokens from this file.</p></header>
+
+  <section><h2>Colour</h2>
+    <div class="swatches">
+      <div class="sw"><div style="background:var(--ink)"></div><p>--ink #102033<br>text, dark fills</p></div>
+      <div class="sw"><div style="background:var(--paper)"></div><p>--paper #f6f8fa<br>page background</p></div>
+      <div class="sw"><div style="background:var(--accent)"></div><p>--accent #0b7a75<br>one highlight per view</p></div>
+      <div class="sw"><div style="background:var(--accent-2)"></div><p>--accent-2 #e0a526<br>callouts, sparingly</p></div>
+      <div class="sw"><div style="background:var(--muted)"></div><p>--muted #5b6b7b<br>captions</p></div>
+      <div class="sw"><div style="background:var(--line)"></div><p>--line #d5dde5<br>rules, borders</p></div>
+    </div>
+  </section>
+
+  <section class="type"><h2>Type</h2>
+    <p style="font:800 var(--t-xl) var(--f-display)">Manrope for headings</p>
+    <p>Source Serif 4 for body text, set at 17px with 1.6 line height and about 65 characters per line.</p>
+    <p style="font:var(--t-sm) var(--f-mono)">JetBrains Mono for numbers, data and code</p>
+  </section>
+
+  <section><h2>Spacing and layout</h2>
+    <ul>
+      <li>4px base scale: 4, 8, 12, 16, 24, 32, 48, 64. Use nothing in between.</li>
+      <li>Corner radius 8px on cards and buttons only.</li>
+      <li>Decks are 16:9 (1920×1080), one idea per slide, headline states the takeaway.</li>
+    </ul>
+  </section>
+
+  <section><h2>Logo rules</h2>
+    <ul>
+      <li>Wordmark "youlytics" in lowercase Manrope 800, in <code>--ink</code> on light or <code>--paper</code> on dark.</li>
+      <li>Clear space around it equal to the height of the "y".</li>
+      <li>Never stretch, outline, add effects or place it on a busy photo.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

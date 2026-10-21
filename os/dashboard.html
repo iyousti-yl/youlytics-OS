@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics-OS dashboard</title>
+<style>
+:root{--ink:#102033;--paper:#f6f8fa;--surface:#fff;--line:#d5dde5;--muted:#5b6b7b;--accent:#0b7a75;--warn:#9a6b00;--bad:#c0392b;
+  --f:"Manrope","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--f)}
+main{max-width:760px;margin:0 auto;padding:40px 16px;display:grid;gap:20px}
+h1{margin:0;font-size:28px} h2{margin:0 0 8px;font-size:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+button.run{background:var(--accent);color:#fff;border-color:var(--accent);cursor:pointer}
+button.run:disabled{opacity:.5;cursor:wait}
+.st{font:13px var(--mono);color:var(--muted)} .st.running{color:var(--warn)} .st.failed{color:var(--bad)} .st.done{color:var(--accent)}
+ul{margin:0;padding-left:1.2em} a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>youlytics-OS dashboard</h1>
+  <p>Each button runs a skill in the background with <code>claude -p</code>. Pick the model and effort next to it.</p>
+  <div id="buttons"></div>
+  <section class="card"><h2>Latest reports</h2><ul id="reports"><li>None yet.</li></ul></section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const opt = (vals, sel) => vals.map(v => `<option${v===sel?" selected":""}>${v}</option>`).join("");
+let built = false;
+async function refresh(){
+  const s = await (await fetch("/api/state")).json();
+  if (!built) {
+    $("#buttons").innerHTML = Object.entries(s.buttons).map(([k,b]) => `
+      <section class="card" data-skill="${k}">
+        <h2>${b.label}</h2>
+        <div class="row">
+          <button class="run" type="button">Run /${k}</button>
+          <label>Model <select class="m">${opt(["haiku","sonnet","opus"], b.default_model)}</select></label>
+          <label>Effort <select class="e">${opt(["low","medium","high","xhigh","max"], b.default_effort)}</select></label>
+        </div>
+        <div class="st">Not run yet</div>
+      </section>`).join("");
+    document.querySelectorAll("[data-skill]").forEach(c => c.querySelector(".run").addEventListener("click", async () => {
+      const r = await fetch("/api/run", {method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({skill:c.dataset.skill, model:c.querySelector(".m").value, effort:c.querySelector(".e").value})});
+      if (!r.ok) alert((await r.json()).error);
+      refresh();
+    }));
+    built = true;
+  }
+  document.querySelectorAll("[data-skill]").forEach(c => {
+    const r = s.runs[c.dataset.skill], st = c.querySelector(".st");
+    c.querySelector(".run").disabled = r?.state === "running";
+    if (!r) return;
+    st.className = "st " + r.state;
+    st.textContent = r.state === "running" ? `Running on ${r.model}, ${r.effort} effort…`
+      : `${r.state === "done" ? "Finished" : "Failed"} in ${r.seconds}s on ${r.model}. Log: ${r.log}`;
+  });
+  $("#reports").innerHTML = s.reports.length ? s.reports.map(r => `<li><a href="/reports/${encodeURIComponent(r.name)}" target="_blank">${r.name}</a> <span class="st">${r.modified}</span></li>`).join("") : "<li>None yet.</li>";
+}
+refresh(); setInterval(refresh, 3000);
+</script>
+</body>
+</html>
