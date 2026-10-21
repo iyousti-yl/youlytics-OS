@@ -3,3 +3,4 @@
 *.key
 secrets/
 os/reports/*.log
+os/router/log.jsonl

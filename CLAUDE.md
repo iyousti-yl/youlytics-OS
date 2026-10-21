@@ -15,7 +15,8 @@ Each department has one router file that says what lives in each of its folders.
 ## Other places
 - `artifacts/` holds every deck, infographic and PDF, with `artifacts/index.html` as the inbox (newest first).
 - `brand/brand-book.html` holds colours, fonts, spacing and logo rules. Every artifact is built from it.
-- `.claude/skills/` holds the skills. Current ones: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`.
+- `.claude/skills/` holds the skills. Current ones: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`.
+- `os/router/` picks the model and effort for each prompt (pinned skills first, then Jev). `os/ask "prompt"` starts a chat on the routed model.
 - `os/` holds the local dashboard (`python3 os/server.py`) and the reports skills write there.
 - `memory/` holds one file per memory subject. `MEMORY.md` is its one-line-per-file catalog.
 
@@ -24,6 +25,7 @@ Each department has one router file that says what lives in each of its folders.
 - Keep files plain text (Markdown, HTML, JSON). No vector database.
 - Every image gets a text description: save the prompt that made it next to it as `<image>.txt`.
 - Never ask for API keys in chat. Keys live in `.env` (gitignored).
+- Every new fixed-step skill gets `model: haiku` and `effort: low` in its frontmatter. Use sonnet or opus only when the skill needs judgement.
 
 ## When a chat compacts, always keep
 - Decisions made and the reason for each

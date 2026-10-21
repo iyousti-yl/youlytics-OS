@@ -2,6 +2,7 @@
 name: business-data
 description: Find youlytics' current numbers, dashboards and reports. Use for any question about revenue, clients, pipeline or metrics.
 model: haiku
+effort: low
 ---
 
 # /business-data

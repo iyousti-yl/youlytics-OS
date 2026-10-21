@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Start a Claude Code chat on the model and effort the router picks.
+#   os/ask "draft a proposal for the Acme SAP dashboard"
+#   os/ask /grammar "check this paragraph"
+set -euo pipefail
+cd "$(dirname "$0")/.."
+read -r model effort < <(python3 os/router/route.py "$*")
+echo "Routing: $model, $effort effort" >&2
+exec claude --model "$model" --effort "$effort" "$*"

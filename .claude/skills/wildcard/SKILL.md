@@ -2,6 +2,7 @@
 name: wildcard
 description: Defines what a wildcard is, so database skills don't overfit to their references. Use when a skill pitches options.
 model: haiku
+effort: low
 ---
 
 # /wildcard

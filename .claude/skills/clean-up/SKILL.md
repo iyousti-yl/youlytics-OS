@@ -2,6 +2,7 @@
 name: clean-up
 description: Check the computer for space hogs and slow apps and write a short report. Runs headless from the dashboard button.
 model: haiku
+effort: low
 ---
 
 # /clean-up

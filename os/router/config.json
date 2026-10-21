@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "log": true,
+  "router_model": "typesafe/jev-1.14",
+  "endpoint": "https://openrouter.ai/api/alpha/decisions",
+  "timeout_seconds": 3,
+  "default_model": "sonnet",
+  "default_effort": "medium",
+  "models": {
+    "haiku": "Simple, fixed-step or short tasks: spelling and grammar, formatting, lookups, renaming, short summaries, small routine file edits.",
+    "sonnet": "Everyday work: drafting and editing, analysis, multi-step coding, research across a few files, building a deck or page.",
+    "opus": "Hard or high-stakes work: architecture and design decisions, complex debugging, long strategy documents, ambiguous multi-part problems."
+  },
+  "efforts": [
+    "low",
+    "medium",
+    "high"
+  ]
+}

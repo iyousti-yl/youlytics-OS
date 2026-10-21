@@ -7,6 +7,7 @@ Only skills listed in os/buttons.json can be run, with the tools listed there.
 """
 import json
 import subprocess
+import sys
 import threading
 import time
 from datetime import datetime
@@ -17,8 +18,9 @@ ROOT = Path(__file__).resolve().parent.parent
 OS_DIR = ROOT / "os"
 REPORTS = OS_DIR / "reports"
 HOST, PORT = "127.0.0.1", 8765
-MODELS = {"haiku", "sonnet", "opus"}
-EFFORTS = {"low", "medium", "high", "xhigh", "max"}
+MODELS = {"haiku", "sonnet", "opus", "auto"}
+EFFORTS = {"low", "medium", "high", "xhigh", "max", "auto"}
+ROUTER = OS_DIR / "router"
 
 runs = {}  # skill -> {"state", "started", "finished", "model", "effort", "log"}
 lock = threading.Lock()
@@ -28,8 +30,22 @@ def load_buttons():
     return json.loads((OS_DIR / "buttons.json").read_text())
 
 
+def routed(prompt):
+    """Ask the router (os/router/route.py) for a model and effort."""
+    out = subprocess.run([sys.executable, str(ROUTER / "route.py"), "--json", prompt],
+                         cwd=ROOT, capture_output=True, text=True, timeout=30)
+    pick = json.loads(out.stdout)
+    return pick["model"], pick["effort"], pick["source"]
+
+
 def run_skill(skill, cfg, model, effort):
     REPORTS.mkdir(exist_ok=True)
+    if model == "auto" or effort == "auto":
+        r_model, r_effort, source = routed(cfg["prompt"])
+        model = r_model if model == "auto" else model
+        effort = r_effort if effort == "auto" else effort
+        with lock:
+            runs[skill].update(model=model, effort=effort, routed=source)
     stamp = datetime.now().strftime("%Y-%m-%d-%H%M")
     log = REPORTS / f"{skill}-{stamp}.log"
     cmd = ["claude", "-p", cfg["prompt"], "--model", model, "--effort", effort,
@@ -74,7 +90,11 @@ class Handler(BaseHTTPRequestHandler):
             with lock:
                 state = {k: dict(v) for k, v in runs.items()}
             buttons = {k: {kk: v[kk] for kk in ("label", "default_model", "default_effort")} for k, v in load_buttons().items()}
-            return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports()})
+            router = json.loads((ROUTER / "config.json").read_text())
+            stats = json.loads(subprocess.run([sys.executable, str(ROUTER / "route.py"), "stats"],
+                                              cwd=ROOT, capture_output=True, text=True).stdout or "{}")
+            return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
+                                    "router": {"enabled": router.get("enabled", True), "stats": stats}})
         if self.path.startswith("/reports/"):
             name = Path(self.path[len("/reports/"):]).name
             f = REPORTS / name
@@ -83,12 +103,16 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.path != "/api/run" or not self._same_origin():
+        if self.path not in ("/api/run", "/api/router") or not self._same_origin():
             return self._send(403, {"error": "not allowed"})
         try:
             req = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
         except json.JSONDecodeError:
             return self._send(400, {"error": "bad request"})
+        if self.path == "/api/router":
+            subprocess.run([sys.executable, str(ROUTER / "route.py"), "on" if req.get("enabled") else "off"],
+                           cwd=ROOT, capture_output=True)
+            return self._send(200, {"ok": True})
         buttons = load_buttons()
         skill, model, effort = req.get("skill"), req.get("model"), req.get("effort")
         if skill not in buttons or model not in MODELS or effort not in EFFORTS:
