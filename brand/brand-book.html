@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics brand book</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* youlytics brand tokens: Direction A, Sapphire Steady (chosen 2026-10-21). Every artifact copies this :root block. */
+:root{
+  /* colour */
+  --sapphire:#1F3B70;      /* primary: logo, headers, slide backgrounds */
+  --sapphire-soft:#C9D4E8; /* secondary text on sapphire */
+  --ink:#142033;           /* body text */
+  --muted:#4F5B6E;         /* captions, labels */
+  --amethyst:#5E4E8C;      /* secondary: charts, second series, sections */
+  --amber:#D9962B;         /* highlight: one key number or call to action per view */
+  --amber-on-dark:#E9B35A; /* amber for small text on sapphire */
+  --ruby:#9E2B3F;          /* alerts, negative numbers, risks */
+  --mist:#F4F6FA;          /* page background */
+  --surface:#FFFFFF;       /* cards */
+  --line:#D3DAE5;          /* borders, rules */
+  /* type */
+  --f-sans:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --t-xs:12px; --t-sm:14px; --t-md:16px; --t-lg:22px; --t-xl:34px; --t-xxl:56px; --t-hero:72px;
+  /* spacing (4px base) */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  --radius:10px; --radius-lg:12px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--mist);color:var(--ink);font:var(--t-md)/1.6 var(--f-sans)}
+main{max-width:1040px;margin:0 auto;padding:var(--s7) var(--s4);display:grid;gap:var(--s8)}
+h1,h2,h3{margin:0;line-height:1.15;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:var(--t-xl);font-weight:600;margin-bottom:var(--s5)}
+h3{font-size:var(--t-lg);font-weight:600}
+p{margin:0;max-width:65ch}
+.label{font:500 var(--t-xs)/1 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.hero{background:var(--sapphire);color:#fff;border-radius:var(--radius-lg);padding:var(--s7);display:flex;align-items:center;gap:var(--s6);flex-wrap:wrap}
+.word{font-size:var(--t-hero);font-weight:600;letter-spacing:-.03em;line-height:1}
+.word span{font-weight:400}
+.hero p{color:var(--sapphire-soft);font-size:var(--t-lg)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--s3)}
+.sw{display:grid;gap:var(--s2);font-size:var(--t-sm)}
+.sw div{height:84px;border-radius:8px;border:1px solid var(--line)}
+.sw code{font:var(--t-xs) var(--f-mono);color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--s6)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--s5);display:grid;gap:var(--s3);align-content:start}
+ul{margin:0;padding-left:1.2em;display:grid;gap:var(--s2)}
+.do{color:#1d6b3a;font-weight:600} .dont{color:var(--ruby);font-weight:600}
+.num{font:500 var(--t-lg) var(--f-mono);color:var(--sapphire)}
+table{border-collapse:collapse;width:100%;font-size:var(--t-sm)}
+td,th{text-align:left;padding:var(--s2) var(--s3);border-bottom:1px solid var(--line)}
+th{font:500 var(--t-xs) var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tbl{overflow-x:auto}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero" aria-label="Logo lockup">
+    <img src="logo-mark-reversed.svg" width="88" height="88" alt="youlytics mark">
+    <div style="display:grid;gap:8px">
+      <div class="word">you<span>lytics</span></div>
+      <p>SAP analytics, made clear.</p>
+    </div>
+  </section>
+
+  <section>
+    <span class="label">Who we are</span>
+    <h2>Trust, calm, professional</h2>
+    <div class="cols">
+      <p>youlytics is a Belgian technology company. Today it is mainly an SAP analytics consultancy; next it will build apps and sell AI tools. The name joins Yousti and analytics.</p>
+      <p>The brand should feel like a steady expert: quiet confidence, no hype, clear numbers. Sapphire carries the trust, generous white space carries the calm, and one amber highlight shows what matters.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Colour</h2>
+    <div class="grid">
+      <div class="sw"><div style="background:var(--sapphire)"></div><b>Sapphire</b><code>#1F3B70 · primary</code></div>
+      <div class="sw"><div style="background:var(--ink)"></div><b>Ink</b><code>#142033 · text</code></div>
+      <div class="sw"><div style="background:var(--amethyst)"></div><b>Amethyst</b><code>#5E4E8C · secondary</code></div>
+      <div class="sw"><div style="background:var(--amber)"></div><b>Amber</b><code>#D9962B · highlight</code></div>
+      <div class="sw"><div style="background:var(--ruby)"></div><b>Ruby</b><code>#9E2B3F · alerts</code></div>
+      <div class="sw"><div style="background:var(--mist)"></div><b>Mist</b><code>#F4F6FA · ground</code></div>
+    </div>
+    <div class="cols" style="margin-top:var(--s6)">
+      <div class="card"><h3>Use</h3><ul>
+        <li>Mostly mist and white, with sapphire for the logo, headers and title slides.</li>
+        <li>Amber for one highlight per view: the key number or the call to action. Put ink text on amber, never white.</li>
+        <li>Amethyst for the second series in charts and for section accents.</li>
+        <li>Ruby only for risks, alerts and negative numbers.</li>
+      </ul></div>
+      <div class="card"><h3>Chart order</h3><ul>
+        <li>Series 1 sapphire, 2 amethyst, 3 amber, 4 muted grey #8A96A8.</li>
+        <li>Ruby is never a regular series; it flags a problem.</li>
+        <li>On sapphire backgrounds, small amber text uses #E9B35A, and secondary text uses #C9D4E8.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Type</h2>
+    <div class="cols">
+      <div class="card">
+        <span class="label">IBM Plex Sans</span>
+        <p style="font-size:var(--t-xl);font-weight:600;line-height:1.15">Your SAP data, finally telling one story.</p>
+        <p>Headlines in 600, body in 400 at 16px with 1.6 line height. Sentence case everywhere; no all-caps headlines.</p>
+      </div>
+      <div class="card">
+        <span class="label">IBM Plex Mono</span>
+        <span class="num">€ 1,284,500 · +12.4%</span>
+        <p>Numbers, KPIs, table figures, labels and code. Mono keeps figures aligned in reports and dashboards.</p>
+      </div>
+    </div>
+    <div class="tbl" style="margin-top:var(--s5)"><table>
+      <thead><tr><th>Role</th><th>Size</th><th>Weight</th></tr></thead>
+      <tbody>
+        <tr><td>Hero / title slide</td><td>56–72px</td><td>600</td></tr>
+        <tr><td>Heading</td><td>34px</td><td>600</td></tr>
+        <tr><td>Subheading</td><td>22px</td><td>600</td></tr>
+        <tr><td>Body</td><td>16px</td><td>400</td></tr>
+        <tr><td>Caption, label (Plex Mono, uppercase, +0.12em)</td><td>12px</td><td>500</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Spacing and layout</h2>
+    <ul>
+      <li>4px base scale: 4, 8, 12, 16, 24, 32, 48, 64. Use nothing in between.</li>
+      <li>Corner radius 10px on cards and buttons, 12px on large panels.</li>
+      <li>Decks are 16:9 (1920×1080). One idea per slide; the headline states the takeaway.</li>
+      <li>Leave room: when in doubt, add space rather than another element.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Logo</h2>
+    <div class="cols">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:16px"><img src="logo-mark.svg" width="56" height="56" alt="youlytics mark on light"><span style="font-size:34px;font-weight:600;letter-spacing:-.03em;color:var(--sapphire)">you<span style="font-weight:400">lytics</span></span></div>
+        <p>The wordmark sets "you" in 600 and "lytics" in 400, always lowercase. The mark is a y whose rising stroke ends in an amber data point.</p>
+      </div>
+      <div class="card"><ul>
+        <li><span class="do">Do</span> use sapphire on light grounds and white on sapphire.</li>
+        <li><span class="do">Do</span> keep clear space equal to the height of the mark's dot times three.</li>
+        <li><span class="dont">Don't</span> stretch, outline, recolour or add shadows.</li>
+        <li><span class="dont">Don't</span> place it on busy photos or on amber.</li>
+        <li>Files: <code>logo-mark.svg</code>, <code>logo-mark-reversed.svg</code>.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Voice</h2>
+    <ul>
+      <li>Plain and precise: say what the data shows and what to do about it.</li>
+      <li>Calm: no exclamation marks, no hype words ("revolutionary", "game-changing").</li>
+      <li>Trust through specifics: real numbers, named sources, clear next steps.</li>
+      <li>The /tone skill learns the rest from Issam's own edits.</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

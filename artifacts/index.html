@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Artifacts inbox</title>
+<style>
+:root{--ink:#142033;--paper:#F4F6FA;--surface:#fff;--line:#D3DAE5;--muted:#4F5B6E;--accent:#1F3B70;
+  --f-display:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--f-display)}
+main{max-width:860px;margin:0 auto;padding:40px 16px;display:grid;gap:16px}
+h1{margin:0;font-size:32px}
+input{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:8px;width:100%;box-sizing:border-box}
+ol{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+li a{display:grid;grid-template-columns:100px 1fr auto;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:8px;color:inherit;text-decoration:none}
+li a:hover{border-color:var(--accent)}
+.d{font:13px var(--f-mono);color:var(--muted)} .t{font-weight:700} .s{color:var(--muted);font-size:14px;grid-column:2/4}
+.k{font:12px var(--f-mono);color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Artifacts inbox</h1>
+  <input id="q" type="search" placeholder="Search titles, types and summaries" aria-label="Search artifacts">
+  <ol id="list"></ol>
+</main>
+<script>
+// /brand adds new entries at the TOP of this list. Newest first.
+const ENTRIES = [
+  {date:"2026-10-21", title:"Agentic OS overview", type:"one-pager", path:"2026-10-21-agentic-os-overview/index.html", summary:"Sample artifact: the ARMS levels and how this workspace is laid out."},
+];
+const list = document.getElementById("list"), q = document.getElementById("q");
+function render(){
+  const term = q.value.toLowerCase();
+  list.replaceChildren(...ENTRIES.filter(e => (e.title+e.type+e.summary).toLowerCase().includes(term)).map(e => {
+    const li = document.createElement("li"), a = document.createElement("a");
+    a.href = e.path;
+    for (const [cls, txt] of [["d",e.date],["t",e.title],["k",e.type],["s",e.summary]]) { const s = document.createElement("span"); s.className = cls; s.textContent = txt; a.append(s); }
+    li.append(a); return li;
+  }));
+}
+q.addEventListener("input", render); render();
+</script>
+</body>
+</html>

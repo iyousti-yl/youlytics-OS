@@ -1,0 +1,14 @@
+{
+  "clean-up": {
+    "label": "Clean up my computer",
+    "prompt": "/clean-up",
+    "default_model": "haiku",
+    "default_effort": "low",
+    "allowed_tools": [
+      "Read", "Glob", "Grep",
+      "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)",
+      "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)",
+      "Write(./os/reports/**)", "Edit(./os/reports/**)"
+    ]
+  }
+}
