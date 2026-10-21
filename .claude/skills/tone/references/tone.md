@@ -1,12 +1,15 @@
 # Issam's tone of voice
 
-Status: empty. Paste 3 to 5 pieces of your best writing below, and Claude will pull the principles out of them.
+Status: learning. Built from Issam's edits, feedback and approved writing as /tone is used.
 
 ## Principles
-(The rules behind the examples, one line each. Prefer a principle that explains several examples over many narrow rules.)
+(The rules behind the examples, one line each, each citing the example it came from.)
 
 ## Examples
-(Real writing, newest first. Each one with a line on why it works.)
+(Real writing Issam approved, newest first, each with a line on why it works.)
 
 ## Approved wildcards
 (Wildcards Issam liked, promoted from /tone pitches.)
+
+## Changelog
+(Date, what changed, why.)
