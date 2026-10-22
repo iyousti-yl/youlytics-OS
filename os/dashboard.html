@@ -45,6 +45,10 @@ th{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-
     </div>
     <div class="st" id="router-stats">No routing calls yet.</div>
   </section>
+  <section class="card"><h2>Apps</h2>
+    <p class="st">How Claude reaches each app, lightest first. Add one with <code>/connect &lt;app&gt;</code>; check them with <code>python3 os/apps/check.py</code>.</p>
+    <table id="apps"><thead><tr><th>App</th><th>Way in</th><th>Last check</th></tr></thead><tbody></tbody></table>
+  </section>
   <section class="card"><h2>Prompt cache, last 30 days</h2>
     <p id="cache" class="st">Reading your sessions…</p>
     <p class="st">Details: <code>python3 os/memory/cache.py</code>. Keep-warm pings: <code>python3 os/memory/keepwarm.py status</code>.</p>
@@ -109,6 +113,8 @@ async function refresh(){
       <td class="num" style="color:${pct >= 100 ? "#9E2B3F" : "inherit"}">$${r.cost.toFixed(2)} / $${r.cap.toFixed(2)}</td>
       <td><button class="run" type="button" data-routine="${r.id}" ${r.running ? "disabled" : ""}>${r.running ? "Running…" : "Run now"}</button></td></tr>`;
   }).join("");
+  $("#apps tbody").innerHTML = (s.apps || []).map(a => `<tr><td>${esc(a.name)}</td><td class="st">${a.way_in}</td>
+    <td style="color:${a.ok === false ? "#9E2B3F" : "inherit"}">${a.ok === true ? "ok" : a.ok === false ? "failed" : "in Claude Code"} <span class="st">${esc(a.detail)}</span></td></tr>`).join("");
   const c = s.cache || {};
   if (c.keep_warm) $("#cache").textContent = `${c.reloads} cold reloads in ${c.chats} chats, $${c.reload_extra_usd.toFixed(2)} extra at API prices. ` +
     `Keeping chats warm would have cost $${c.keep_warm.ping_cost_usd.toFixed(2)} and saved $${c.keep_warm.saved_usd.toFixed(2)}: ` +

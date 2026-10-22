@@ -1,0 +1,25 @@
+{
+  "apps": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "way_in": "cli",
+      "how": "GitHub's own CLI, gh (maker's tool). Sign in once with `gh auth login`.",
+      "key_env": null,
+      "test": "gh api repos/iyousti-yl/youlytics-OS --jq .full_name",
+      "used_by": ["the youlytics-OS repo, PRs"],
+      "status": "connected"
+    },
+    {
+      "id": "gmail",
+      "name": "Gmail",
+      "way_in": "connector",
+      "how": "Anthropic's Gmail connector on claude.ai (maker's tool). In Claude Code it shows up under /mcp once you sign in to claude.ai.",
+      "key_env": null,
+      "test": null,
+      "test_in_claude": "Search my Gmail for the newest thread and give me its subject only.",
+      "used_by": ["inbox-digest routine (off until the server name is in routines.json)"],
+      "status": "connected on claude.ai; check /mcp in Claude Code"
+    }
+  ]
+}

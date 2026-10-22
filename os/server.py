@@ -159,6 +159,21 @@ def cache_report():
     return _cache_cache["data"]
 
 
+_apps_cache = {"at": 0, "data": []}
+
+
+def apps_state():
+    """Each app from os/apps/apps.json with its last check, refreshed at most every 10 minutes."""
+    if time.time() - _apps_cache["at"] > 600:
+        out = subprocess.run([sys.executable, str(OS_DIR / "apps" / "check.py"), "--json"],
+                             cwd=ROOT, capture_output=True, text=True)
+        try:
+            _apps_cache.update(at=time.time(), data=json.loads(out.stdout))
+        except json.JSONDecodeError:
+            _apps_cache.update(at=time.time(), data=[])
+    return _apps_cache["data"]
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
@@ -193,7 +208,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
                                     "skills": skill_usage(), "routines": routines_state(),
-                                    "inbox": inbox(), "cache": cache_report()})
+                                    "inbox": inbox(), "cache": cache_report(), "apps": apps_state()})
         path, _, query = self.path.partition("?")
         if path in PAGES:
             return self._send(200, PAGES[path].read_bytes(), TYPES[".html"])
