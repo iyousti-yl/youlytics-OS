@@ -17,6 +17,7 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
 7. Routines: `python3 os/routines/run.py list` shows them; `run <id>` runs one now; `install` prints the line that runs due routines every 15 minutes (cron on Mac/Linux, Task Scheduler on Windows). Results land in the dashboard inbox. `/routines-review` sorts them into active and passive, and `/cap-routine` trims the most expensive one.
 8. Every Friday at 08:00 the `weekly-recos` routine runs `/suggest-routines`: it reads your week of sessions, spots jobs you did by hand 3 or more times and puts cards on http://127.0.0.1:8765/recos. Add the good ones to the cart, copy it and paste it into Claude Code. `/recos?example` shows example cards.
 9. Long chats: `python3 os/memory/cache.py` shows the last 30 days of cold-cache reloads and what keeping chats warm would have saved. Only if it pays: `python3 os/memory/keepwarm.py on`, then schedule it with `keepwarm.py install`.
+10. Never correct Claude twice: type `/note <skill> <feedback>` mid-job to park a fix in that skill's `NOTES.md`, then `/note apply` when you're ready (it runs on haiku). For lessons that matter, `/calibrate` saves the rule to `memory/`, links it and fixes the skill, after you approve.
 
 ## What's built
 | Level | What |
@@ -29,3 +30,4 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
 | R2 Capped routines | Weekly USD cap per routine, enforced as the run's budget; cost and tokens logged per run; `run.py costs` and the dashboard show week cost against cap; `/cap-routine` |
 | R3 Routines that suggest routines | `os/recos/collect.py` gathers the week's typed prompts locally; `/suggest-routines` writes routine, skill and memory cards to `os/recos/recos.json`; the Recos page (built from the `os/ui/` parts) has a cart that copies the picks back to Claude |
 | M2 Short-term memory | Compact rules in `CLAUDE.md`; `os/memory/cache.py` counts cold-cache reloads over 30 days and prices a keep-warm ping at API rates; `os/memory/keepwarm.py` (off by default) pings idle chats on the same model as a fork, checks each ping hit the cache, and stops pinging a chat when it misses |
+| M3 Self-evolving memory | `/note` parks feedback in each skill's or app's `NOTES.md` and applies it only on `/note apply` (haiku); `/calibrate` writes the lesson to `memory/`, links related memories and fixes the skill; `CLAUDE.md` says to offer them instead of saving quietly; open notes show in the dashboard; memory cards on the Recos page are the suggested fixes |
