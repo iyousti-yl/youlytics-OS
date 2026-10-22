@@ -45,6 +45,10 @@ th{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-
     </div>
     <div class="st" id="router-stats">No routing calls yet.</div>
   </section>
+  <section class="card"><h2>Prompt cache, last 30 days</h2>
+    <p id="cache" class="st">Reading your sessions…</p>
+    <p class="st">Details: <code>python3 os/memory/cache.py</code>. Keep-warm pings: <code>python3 os/memory/keepwarm.py status</code>.</p>
+  </section>
   <div id="buttons"></div>
   <section class="card"><h2>Skills, most used first</h2>
     <p class="st">From your Claude Code sessions in the last 90 days. Give the top one feedback and run /teach.</p>
@@ -105,6 +109,10 @@ async function refresh(){
       <td class="num" style="color:${pct >= 100 ? "#9E2B3F" : "inherit"}">$${r.cost.toFixed(2)} / $${r.cap.toFixed(2)}</td>
       <td><button class="run" type="button" data-routine="${r.id}" ${r.running ? "disabled" : ""}>${r.running ? "Running…" : "Run now"}</button></td></tr>`;
   }).join("");
+  const c = s.cache || {};
+  if (c.keep_warm) $("#cache").textContent = `${c.reloads} cold reloads in ${c.chats} chats, $${c.reload_extra_usd.toFixed(2)} extra at API prices. ` +
+    `Keeping chats warm would have cost $${c.keep_warm.ping_cost_usd.toFixed(2)} and saved $${c.keep_warm.saved_usd.toFixed(2)}: ` +
+    (c.keep_warm.pays ? "it pays" : "it does not pay") + `. Keep-warm is ${c.keep_warm.on ? "on" : "off"}.`;
   $("#reports").innerHTML = s.reports.length ? s.reports.map(r => `<li><a href="/reports/${encodeURIComponent(r.name)}" target="_blank">${r.name}</a> <span class="st">${r.modified}</span></li>`).join("") : "<li>None yet.</li>";
 }
 const post = (url, body) => fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});

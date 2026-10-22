@@ -12,6 +12,8 @@ The memory catalog: @MEMORY.md
 - `os/server.py` runs the local dashboard; skills write their reports to `os/reports/`.
 - Routines live in `os/routines/routines.json` and run with `python3 os/routines/run.py`. Prefer passive routines (they only reach `os/inbox.jsonl` when something is worth flagging); every routine has a weekly cap in USD. A new routine gets a flag rule, the fewest tools it needs, and a cap.
 
+- Long chats: when a chat gets long, suggest `/compact keep <what matters>` rather than letting it compact on its own. `python3 os/memory/cache.py` shows how often a cold cache (idle over an hour) made a chat reload and what it cost; `os/memory/keepwarm.py` pings idle chats to keep them warm, and stays off unless those numbers say it pays. Show the numbers before changing anything.
+
 ## When a chat compacts, always keep
 - Decisions made and the reason for each
 - Templates and formats agreed with Issam

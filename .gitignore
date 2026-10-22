@@ -14,3 +14,6 @@ os/reports/routines/
 os/reports/*.md
 os/recos/recos.json
 os/recos/week-prompts.json
+os/memory/pings.jsonl
+os/memory/keepwarm-state.json
+os/memory/keepwarm.log

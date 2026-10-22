@@ -144,6 +144,21 @@ def mark_read(key):
     INBOX.write_text("".join(json.dumps(r) + "\n" for r in rows))
 
 
+_cache_cache = {"at": 0, "data": {}}
+
+
+def cache_report():
+    """Cold-cache numbers from os/memory/cache.py, refreshed at most every 10 minutes."""
+    if time.time() - _cache_cache["at"] > 600:
+        out = subprocess.run([sys.executable, str(OS_DIR / "memory" / "cache.py"), "--json"],
+                             cwd=ROOT, capture_output=True, text=True)
+        try:
+            _cache_cache.update(at=time.time(), data=json.loads(out.stdout))
+        except json.JSONDecodeError:
+            _cache_cache.update(at=time.time(), data={})
+    return _cache_cache["data"]
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
@@ -178,7 +193,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
                                     "skills": skill_usage(), "routines": routines_state(),
-                                    "inbox": inbox()})
+                                    "inbox": inbox(), "cache": cache_report()})
         path, _, query = self.path.partition("?")
         if path in PAGES:
             return self._send(200, PAGES[path].read_bytes(), TYPES[".html"])
