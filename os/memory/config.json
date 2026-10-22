@@ -1,0 +1,7 @@
+{
+  "keep_warm": false,
+  "ping_every_minutes": 50,
+  "warm_for_hours": 4,
+  "min_context_tokens": 50000,
+  "ping_prompt": "Keep-alive ping. Reply with the single word ok and do nothing else."
+}

@@ -1,0 +1,65 @@
+{
+  "routines": [
+    {
+      "id": "machine-care",
+      "name": "Machine care",
+      "mode": "passive",
+      "schedule": "daily 09:00",
+      "enabled": true,
+      "prompt": "/clean-up Flag only if free disk space is under 15%, if any single cleanup would free more than 5 GB, or if an app has used more than 50% CPU for a long time.",
+      "model": "auto",
+      "effort": "auto",
+      "cap_usd_week": 1.0,
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)", "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)", "Write(./os/reports/**)", "Edit(./os/reports/**)"]
+    },
+    {
+      "id": "brand-watch",
+      "name": "Brand watch",
+      "mode": "passive",
+      "schedule": "weekly mon 08:00",
+      "enabled": true,
+      "prompt": "Search the web for the name youlytics and the youlytics logo wording. Ignore everything listed as Issam's own in business/ops/brand-watch.md and anything already listed there as seen. Flag only a site, profile or company that uses the name or brand without being Issam's. Add any new finding to the 'Seen' list in that file.",
+      "model": "haiku",
+      "effort": "low",
+      "cap_usd_week": 1.0,
+      "allowed_tools": ["Read", "WebSearch", "WebFetch", "Edit(./business/ops/brand-watch.md)"]
+    },
+    {
+      "id": "domain-scout",
+      "name": "Domain scout",
+      "mode": "passive",
+      "schedule": "weekly wed 08:00",
+      "enabled": true,
+      "prompt": "For every domain in the 'Wanted' list of business/ops/domains.md, check with whois whether it is registered. Flag only a wanted domain that is now available, or one whose expiry date is within 30 days. Update the 'Last checked' line in that file.",
+      "model": "haiku",
+      "effort": "low",
+      "cap_usd_week": 0.5,
+      "allowed_tools": ["Read", "Bash(whois:*)", "Edit(./business/ops/domains.md)"]
+    },
+    {
+      "id": "inbox-digest",
+      "name": "Daily inbox digest",
+      "mode": "active",
+      "schedule": "weekdays 07:30",
+      "enabled": false,
+      "prompt": "Using Gmail, list the email threads from the last 24 hours that need a reply or a decision from Issam, newest first: sender, subject, one line on what they want, and how urgent. Skip newsletters and notifications. End with the one thread to handle first.",
+      "model": "haiku",
+      "effort": "low",
+      "cap_usd_week": 1.0,
+      "allowed_tools": ["mcp__claude_ai_Gmail"],
+      "setup_note": "Needs the Gmail connector in Claude Code. Run /mcp in Claude Code, copy the Gmail server name into allowed_tools as mcp__<name>, then enable."
+    },
+    {
+      "id": "weekly-recos",
+      "name": "Routine suggestions",
+      "mode": "active",
+      "schedule": "weekly fri 08:00",
+      "enabled": true,
+      "prompt": "/suggest-routines",
+      "model": "sonnet",
+      "effort": "medium",
+      "cap_usd_week": 2.0,
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(python3 os/recos/collect.py:*)", "Write(./os/recos/recos.json)", "Edit(./os/recos/recos.json)"]
+    }
+  ]
+}

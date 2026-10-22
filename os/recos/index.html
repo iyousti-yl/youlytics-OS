@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics Recos</title>
+<link rel="stylesheet" href="/ui/parts.css">
+<style>
+#sections{display:grid;gap:28px}
+.recos-section{display:grid;gap:10px}
+.recos-section h2{margin:0;font-size:18px}
+.ui-card .ui-btn.add[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+</style>
+</head>
+<body>
+<main class="ui-page">
+  <header class="ui-header">
+    <h1>Recos</h1>
+    <span class="ui-label" id="week"></span>
+  </header>
+  <p class="ui-sub" id="summary">Loading…</p>
+  <p class="ui-sub">Add the good ones to the cart, copy it and paste it into Claude Code before your usage resets. Claude sets up only what you picked.</p>
+  <div id="sections"></div>
+</main>
+<script src="/ui/parts.js"></script>
+<script>
+UI.nav("Recos");
+const SECTIONS = [["routine", "Routines"], ["skill", "Skills"], ["memory", "Memory fixes"]];
+let data, cart, picked;
+
+function render() {
+  const root = document.querySelector("#sections");
+  root.innerHTML = "";
+  for (const [key, label] of SECTIONS) {
+    const cards = data.cards.filter(c => c.section === key);
+    if (!cards.length) continue;
+    const sec = document.createElement("section");
+    sec.className = "recos-section";
+    sec.innerHTML = `<h2>${label}</h2><div class="ui-grid"></div>`;
+    for (const c of cards) {
+      const on = picked.includes(c.id);
+      const facts = { When: c.when, Saves: c.saves, Seen: c.evidence };
+      if (c.section === "routine") Object.assign(facts, { Mode: c.mode, Cap: `$${Number(c.cap_usd_week || 1).toFixed(2)} a week` });
+      const el = document.createElement("article");
+      el.className = "ui-card" + (on ? " is-picked" : "");
+      el.dataset.card = c.id;
+      el.innerHTML = `<div class="ui-row"><span class="ui-tag ${c.section}">${c.section}</span><h3>${UI.esc(c.title)}</h3></div>
+        <p>${UI.esc(c.what)}</p>
+        <dl class="ui-facts">${Object.entries(facts).filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${UI.esc(v)}</dd>`).join("")}</dl>
+        <div class="ui-row"><button class="ui-btn add" type="button" aria-pressed="${on}" aria-label="Add ${UI.esc(c.title)} to the cart">${on ? "In the cart" : "Add to cart"}</button></div>`;
+      el.querySelector(".add").onclick = () => {
+        picked = on ? picked.filter(x => x !== c.id) : [...picked, c.id];
+        cart.set(picked); render();
+        document.querySelector(`[data-card="${c.id}"] .add`)?.focus();
+      };
+      sec.querySelector(".ui-grid").append(el);
+    }
+    root.append(sec);
+  }
+  if (!data.cards.length && data.week) root.innerHTML = '<p class="ui-empty">No suggestions this week.</p>';
+  const chosen = data.cards.filter(c => picked.includes(c.id));
+  UI.cart({
+    count: chosen.length, label: chosen.length === 1 ? "pick" : "picks",
+    onCopy: () => UI.copy(UI.copyBack(
+      `Set up these picks from the recos page (week ${data.week}). Do them one at a time, show me each change, and change nothing else.`,
+      chosen.map((c, i) => `${i + 1}. [${c.section}] ${c.title}: ${c.setup}`),
+      "Run each new routine once with python3 os/routines/run.py run <id> to check it.")),
+    onClear: () => { picked = []; cart.set(picked); render(); },
+  });
+}
+
+(async () => {
+  const demo = new URLSearchParams(location.search).has("example");
+  const r = await fetch("/api/recos" + (demo ? "?example" : ""));
+  data = await r.json();
+  document.querySelector("#week").textContent = data.week ? `Week ${data.week}` : "";
+  document.querySelector("#summary").innerHTML = data.cards ? UI.esc(data.summary)
+    : 'No suggestions yet. They arrive every Friday morning, or run <code>/suggest-routines</code> now. <a href="?example">See example cards</a>.';
+  data.cards = data.cards || [];
+  cart = UI.store("recos-cart-" + data.week, []);
+  picked = cart.get().filter(id => data.cards.some(c => c.id === id));
+  render();
+})();
+</script>
+</body>
+</html>
