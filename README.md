@@ -14,6 +14,8 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
    `python3 os/router/route.py --test` checks the setup, `on`/`off` switches routing, and `stats` shows picks, speed and cost.
 6. Skills get better from feedback: after a skill's output, tell Claude what missed and run `/teach`. `python3 os/skills/usage.py` shows which skills you use most and what they cost in tokens.
 
+7. Routines: `python3 os/routines/run.py list` shows them; `run <id>` runs one now; `install` prints the line that runs due routines every 15 minutes (cron on Mac/Linux, Task Scheduler on Windows). Results land in the dashboard inbox. `/routines-review` sorts them into active and passive, and `/cap-routine` trims the most expensive one.
+
 ## What's built
 | Level | What |
 |---|---|
@@ -21,3 +23,5 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
 | S2 Model routing | Fixed-step skills pinned to haiku; a router picks model and effort for the rest: Claude Haiku on the Claude plan by default, or Jev via OpenRouter, with Codex on the ChatGPT plan as an optional target; every pick logged with time and cost; on/off switch |
 | S3 Self-improving skills | `/teach` turns feedback into one principle and folds it into the skill (shown first, saved after a yes, logged in the skill's `CHANGELOG.md`); usage ranking by runs and tokens |
 | S1 Skill types | `/tone` database skill with `/wildcard` (8 of 10 follow references, 2 wildcards), `/brand` artifact skill with `brand/brand-book.html` and `artifacts/index.html`, `/clean-up` self-triggered skill with the local dashboard |
+| R1 Active vs passive routines | `os/routines/` registry and runner; active routines always post to the inbox, passive ones only when they flag something; desktop notification; `/routines-review`; starter routines: machine care, brand watch, domain scout, Gmail digest (off until the connector is named) |
+| R2 Capped routines | Weekly USD cap per routine, enforced as the run's budget; cost and tokens logged per run; `run.py costs` and the dashboard show week cost against cap; `/cap-routine` |

@@ -8,7 +8,7 @@
 :root{--ink:#142033;--paper:#F4F6FA;--surface:#fff;--line:#D3DAE5;--muted:#4F5B6E;--accent:#1F3B70;--warn:#9a6b00;--bad:#c0392b;
   --f:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--f)}
-main{max-width:760px;margin:0 auto;padding:40px 16px;display:grid;gap:20px}
+main{max-width:880px;margin:0 auto;padding:40px 16px;display:grid;gap:20px}
 h1{margin:0;font-size:28px} h2{margin:0 0 8px;font-size:18px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -18,13 +18,25 @@ button.run:disabled{opacity:.5;cursor:wait}
 .st{font:13px var(--mono);color:var(--muted)} .st.running{color:var(--warn)} .st.failed{color:var(--bad)} .st.done{color:var(--accent)}
 ul{margin:0;padding-left:1.2em} a{color:var(--accent)}
 table{border-collapse:collapse;width:100%;font-size:14px} th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
-th{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em} .num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.badge{background:#D9962B;color:#142033;border-radius:999px;padding:1px 8px;font:500 12px var(--mono)}
+.item{border-left:3px solid var(--line);padding:4px 10px} .item.unread{border-left-color:var(--accent)} .item.error,.item.cap{border-left-color:#9E2B3F}
+.item p{margin:2px 0} button.link{border:0;padding:0;background:none;color:var(--accent);cursor:pointer;font-size:13px}
+th{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em} .num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap} td .run{white-space:nowrap}
 </style>
 </head>
 <body>
 <main>
   <h1>youlytics-OS dashboard</h1>
   <p>Each button runs a skill in the background with <code>claude -p</code>. Pick the model and effort next to it.</p>
+  <section class="card">
+    <div class="row"><h2>Inbox</h2><span class="badge" id="unread" hidden></span><span style="flex:1"></span><button class="link" id="read-all" type="button">Mark all read</button></div>
+    <p class="st">Active routines always land here. Passive routines only land here when they find something.</p>
+    <div id="inbox"><p class="st">Nothing yet.</p></div>
+  </section>
+  <section class="card"><h2>Routines</h2>
+    <p class="st">Cost is the last 7 days in API-equivalent dollars against each routine's weekly cap. Over the cap, a routine is skipped. Schedule them with <code>python3 os/routines/run.py install</code>.</p>
+    <table id="routines"><thead><tr><th>Routine</th><th>Mode</th><th>Schedule</th><th>Last run</th><th>Week</th><th></th></tr></thead><tbody></tbody></table>
+  </section>
   <section class="card">
     <h2>Model routing</h2>
     <div class="row">
@@ -77,8 +89,30 @@ async function refresh(){
   $("#router-stats").textContent = rs.calls ? `${rs.calls} picks · ${rs.router_calls} by the router${rs.avg_router_ms ? ", avg " + rs.avg_router_ms + " ms" : ""} · $${rs.total_cost_usd} total · ` + Object.entries(rs.by_model).map(([m,n]) => `${m} ${Math.round(100*n/rs.calls)}%`).join(", ") : "No routing calls yet.";
   const sk = (s.skills && s.skills.skills) || [];
   $("#skills tbody").innerHTML = sk.map(r => `<tr><td>/${r.skill}</td><td class="num">${r.runs}</td><td class="num">${r.tokens.toLocaleString()}</td><td class="st">${r.last || "–"}</td></tr>`).join("");
+  const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+  const ib = s.inbox || {items: [], unread: 0};
+  $("#unread").hidden = !ib.unread; $("#unread").textContent = `${ib.unread} new`;
+  $("#inbox").innerHTML = ib.items.length ? ib.items.map(i => `<div class="item ${i.read ? "" : "unread"} ${i.kind}">
+      <p><b>${esc(i.name)}</b> <span class="st">${esc(i.ts.replace("T", " "))} · ${i.mode}</span></p><p>${esc(i.headline)}</p>
+      <p>${i.file ? `<a href="/reports/${encodeURIComponent(i.file.replace("os/reports/", ""))}" target="_blank">Open the report</a> ` : ""}${i.read ? "" : `<button class="link" data-read="${esc(i.ts)}|${esc(i.id)}">Mark read</button>`}</p></div>`).join("")
+    : '<p class="st">Nothing yet.</p>';
+  $("#routines tbody").innerHTML = (s.routines || []).map(r => {
+    const l = r.last, pct = Math.min(100, Math.round(100 * r.cost / r.cap));
+    return `<tr><td>${esc(r.name)}${r.enabled ? "" : ' <span class="st">(off)</span>'}${r.setup_note ? `<div class="st">${esc(r.setup_note)}</div>` : ""}</td>
+      <td>${r.mode}</td><td class="st">${esc(r.schedule)}</td>
+      <td class="st">${l ? `${l.ts.slice(5, 16).replace("T", " ")} · ${l.ok ? (l.flagged ? "flagged" : "quiet") : "failed"}` : "–"}</td>
+      <td class="num" style="color:${pct >= 100 ? "#9E2B3F" : "inherit"}">$${r.cost.toFixed(2)} / $${r.cap.toFixed(2)}</td>
+      <td><button class="run" type="button" data-routine="${r.id}" ${r.running ? "disabled" : ""}>${r.running ? "Running…" : "Run now"}</button></td></tr>`;
+  }).join("");
   $("#reports").innerHTML = s.reports.length ? s.reports.map(r => `<li><a href="/reports/${encodeURIComponent(r.name)}" target="_blank">${r.name}</a> <span class="st">${r.modified}</span></li>`).join("") : "<li>None yet.</li>";
 }
+const post = (url, body) => fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+document.addEventListener("click", async e => {
+  const t = e.target;
+  if (t.dataset.read) { const [ts, id] = t.dataset.read.split("|"); await post("/api/inbox/read", {ts, id}); refresh(); }
+  if (t.dataset.routine) { t.disabled = true; const r = await post("/api/routines/run", {id: t.dataset.routine}); if (!r.ok) alert((await r.json()).error); refresh(); }
+  if (t.id === "read-all") { await post("/api/inbox/read", {all: true}); refresh(); }
+});
 $("#router-on").addEventListener("change", async e => {
   await fetch("/api/router", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({enabled: e.target.checked})});
   refresh();

@@ -9,8 +9,10 @@ Source plan: RoboNuggets "ARMS Agentic OS v2" guide. Visual home: https://claude
 | S1 Skill types | built | `/tone` + `/wildcard` (database), `/brand` (artifact), `/clean-up` (self-triggered, `os/server.py`) |
 | S2 Model routing | built | `os/router/route.py`, `os/ask`, dashboard auto option; pins in skill frontmatter; router on Claude plan, Jev or OpenAI; optional Codex target |
 | S3 Self-improving skills | built | `/teach` (feedback → principle → skill, after a yes), `CHANGELOG.md` per skill, `os/skills/usage.py` + dashboard skills table; first skill: `/tone` |
+| R1 Active vs passive routines | built | `os/routines/run.py` + `routines.json`, inbox `os/inbox.jsonl` in the dashboard, `/routines-review`; passive routines reply NOTHING_TO_FLAG when quiet |
+| R2 Capped routines | built | `cap_usd_week` per routine, passed as `--max-budget-usd`; `run.py costs`; `/cap-routine` |
 | All other levels | not started | |
 
 Model pins: /grammar, /wildcard, /clean-up, /business-data → haiku, low effort. /tone, /brand → sonnet. Everything else → the router in `os/router/config.json` picks (provider `claude` default, `jev` or `openai` optional; `use_codex` adds Codex on the ChatGPT plan).
 
-Suggested next: R1 passive routines.
+Suggested next: R3 routine suggestions.

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Local dashboard for self-triggered skills.
+"""Local dashboard for self-triggered skills, routines and the inbox.
 
 Run from the repo root:  python3 os/server.py   then open http://127.0.0.1:8765
 Each button runs one skill in the background with `claude -p` (no chat window).
 Only skills listed in os/buttons.json can be run, with the tools listed there.
+Routines come from os/routines/routines.json and run through os/routines/run.py.
 """
 import json
 import subprocess
@@ -21,6 +22,8 @@ HOST, PORT = "127.0.0.1", 8765
 MODELS = {"haiku", "sonnet", "opus", "codex", "auto"}
 EFFORTS = {"low", "medium", "high", "xhigh", "max", "auto"}
 ROUTER = OS_DIR / "router"
+ROUTINES = OS_DIR / "routines"
+INBOX = OS_DIR / "inbox.jsonl"
 
 runs = {}  # skill -> {"state", "started", "finished", "model", "effort", "log"}
 lock = threading.Lock()
@@ -83,9 +86,67 @@ def skill_usage():
     return _skills_cache["data"]
 
 
+def read_jsonl(path):
+    if not path.is_file():
+        return []
+    rows = []
+    for line in path.read_text().splitlines():
+        try:
+            rows.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass
+    return rows
+
+
+routine_runs = {}  # routine id -> "running" while the dashboard runs it
+
+
+def routines_state():
+    """Each routine with its week cost against its cap and its last run."""
+    out = subprocess.run([sys.executable, str(ROUTINES / "run.py"), "costs", "--json"],
+                         cwd=ROOT, capture_output=True, text=True)
+    try:
+        rows = json.loads(out.stdout)
+    except json.JSONDecodeError:
+        return []
+    config = {r["id"]: r for r in json.loads((ROUTINES / "routines.json").read_text())["routines"]}
+    last = {}
+    for run in read_jsonl(ROUTINES / "runs.jsonl"):
+        last[run["id"]] = run
+    for row in rows:
+        row["last"] = last.get(row["id"])
+        row["setup_note"] = config.get(row["id"], {}).get("setup_note")
+        row["running"] = routine_runs.get(row["id"]) == "running"
+    return rows
+
+
+def run_routine(rid):
+    subprocess.run([sys.executable, str(ROUTINES / "run.py"), "run", rid], cwd=ROOT, capture_output=True)
+    with lock:
+        routine_runs.pop(rid, None)
+
+
+def inbox(limit=30):
+    rows = read_jsonl(INBOX)
+    rows.reverse()
+    return {"unread": sum(1 for r in rows if not r.get("read")), "items": rows[:limit]}
+
+
+def mark_read(key):
+    """Mark one inbox item (by its ts and id) or all items (key None) as read."""
+    rows = read_jsonl(INBOX)
+    for r in rows:
+        if key is None or (r.get("ts"), r.get("id")) == key:
+            r["read"] = True
+    INBOX.write_text("".join(json.dumps(r) + "\n" for r in rows))
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
+
+
+POSTS = ("/api/run", "/api/router", "/api/routines/run", "/api/inbox/read")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -113,16 +174,18 @@ class Handler(BaseHTTPRequestHandler):
                                               cwd=ROOT, capture_output=True, text=True).stdout or "{}")
             return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
-                                    "skills": skill_usage()})
+                                    "skills": skill_usage(), "routines": routines_state(),
+                                    "inbox": inbox()})
         if self.path.startswith("/reports/"):
-            name = Path(self.path[len("/reports/"):]).name
-            f = REPORTS / name
+            rel = self.path[len("/reports/"):]
+            sub = REPORTS / "routines" if rel.startswith("routines/") else REPORTS
+            f = sub / Path(rel).name
             if f.suffix in (".md", ".log") and f.is_file():
                 return self._send(200, f.read_bytes(), "text/plain; charset=utf-8")
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
-        if self.path not in ("/api/run", "/api/router") or not self._same_origin():
+        if self.path not in POSTS or not self._same_origin():
             return self._send(403, {"error": "not allowed"})
         try:
             req = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
@@ -131,6 +194,21 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/router":
             subprocess.run([sys.executable, str(ROUTER / "route.py"), "on" if req.get("enabled") else "off"],
                            cwd=ROOT, capture_output=True)
+            return self._send(200, {"ok": True})
+        if self.path == "/api/routines/run":
+            ids = {r["id"] for r in json.loads((ROUTINES / "routines.json").read_text())["routines"]}
+            rid = req.get("id")
+            if rid not in ids:
+                return self._send(400, {"error": "unknown routine"})
+            with lock:
+                if routine_runs.get(rid) == "running":
+                    return self._send(409, {"error": "already running"})
+                routine_runs[rid] = "running"
+            threading.Thread(target=run_routine, args=(rid,), daemon=True).start()
+            return self._send(202, {"ok": True})
+        if self.path == "/api/inbox/read":
+            with lock:
+                mark_read(None if req.get("all") else (req.get("ts"), req.get("id")))
             return self._send(200, {"ok": True})
         buttons = load_buttons()
         skill, model, effort = req.get("skill"), req.get("model"), req.get("effort")
