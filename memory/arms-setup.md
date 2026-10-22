@@ -16,8 +16,8 @@ Source plan: RoboNuggets "ARMS Agentic OS v2" guide. Visual home: https://claude
 | M3 Self-evolving memory | built | `/note` (haiku) with `NOTES.md` per skill or app, `/note apply`; `/calibrate` (sonnet); rule in `CLAUDE.md`; Recos memory cards |
 | A1 Connect anything | built | `/connect`, `os/apps/apps.json` (GitHub via gh, Gmail via claude.ai connector), `os/apps/check.py` |
 | A2 Mods | built | status line `.claude/statusline.py` via `.claude/settings.json`; Chrome clipper `os/chrome-clipper/` → `/api/clip` → `knowledge/reading/`. The job (saving articles) was Claude's pick; Issam can swap it |
-| All other levels | not started | |
+| A3 Micro apps | built | `os/ui/` parts + gallery; `/app/<name>` hosting with `/api/data/<name>` storage; Review app `os/review/`; `/micro-app`. Review was Claude's pick (no chat history yet); swap it when a real weekly review shows up |
 
-Model pins: /grammar, /wildcard, /clean-up, /business-data → haiku, low effort. /tone, /brand → sonnet. Everything else → the router in `os/router/config.json` picks (provider `claude` default, `jev` or `openai` optional; `use_codex` adds Codex on the ChatGPT plan).
+Model pins: /grammar, /wildcard, /clean-up, /business-data, /note → haiku, low effort. /tone, /brand, /teach, /routines-review, /cap-routine, /suggest-routines, /calibrate, /connect, /micro-app → sonnet. Everything else → the router in `os/router/config.json` picks (provider `claude` default, `jev` or `openai` optional; `use_codex` adds Codex on the ChatGPT plan).
 
-Suggested next: A3 micro app.
+All twelve levels are built. Next: Issam tests end to end (guide: `docs/test-guide.md`), then real use feeds /teach, /note and the Friday recos.

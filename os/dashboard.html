@@ -28,7 +28,7 @@ th{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-
 <main>
   <h1>youlytics-OS dashboard</h1>
   <p>Each button runs a skill in the background with <code>claude -p</code>. Pick the model and effort next to it.</p>
-  <p>Apps: <a href="/recos">Recos</a> (Friday suggestions with a cart)</p>
+  <p id="micro">Micro apps: loading…</p>
   <section class="card">
     <div class="row"><h2>Inbox</h2><span class="badge" id="unread" hidden></span><span style="flex:1"></span><button class="link" id="read-all" type="button">Mark all read</button></div>
     <p class="st">Active routines always land here. Passive routines only land here when they find something.</p>
@@ -113,6 +113,7 @@ async function refresh(){
       <td class="num" style="color:${pct >= 100 ? "#9E2B3F" : "inherit"}">$${r.cost.toFixed(2)} / $${r.cap.toFixed(2)}</td>
       <td><button class="run" type="button" data-routine="${r.id}" ${r.running ? "disabled" : ""}>${r.running ? "Running…" : "Run now"}</button></td></tr>`;
   }).join("");
+  $("#micro").innerHTML = "Micro apps: " + (s.micro_apps || []).map(a => `<a href="/app/${a.name}" title="${esc(a.desc)}">${esc(a.title)}</a>`).join(" · ");
   $("#apps tbody").innerHTML = (s.apps || []).map(a => `<tr><td>${esc(a.name)}</td><td class="st">${a.way_in}</td>
     <td style="color:${a.ok === false ? "#9E2B3F" : "inherit"}">${a.ok === true ? "ok" : a.ok === false ? "failed" : "in Claude Code"} <span class="st">${esc(a.detail)}</span></td></tr>`).join("");
   const c = s.cache || {};

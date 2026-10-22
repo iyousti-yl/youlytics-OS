@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics UI parts</title>
+<link rel="stylesheet" href="/ui/parts.css">
+</head>
+<body>
+<main class="ui-page">
+  <header class="ui-header"><h1>UI parts</h1><span class="ui-label">os/ui</span><span style="flex:1"></span><a href="/">Dashboard</a></header>
+  <p class="ui-sub">Every local micro app is built from these parts (<code>parts.css</code> + <code>parts.js</code>), so they all look and behave the same. New part? Add it here first.</p>
+  <section class="ui-card">
+    <h3>Buttons, tags and badges</h3>
+    <div class="ui-row">
+      <button class="ui-btn primary" type="button">Primary</button>
+      <button class="ui-btn" type="button">Default</button>
+      <button class="ui-btn highlight" type="button">Highlight (one per view)</button>
+      <button class="ui-btn quiet" type="button">Quiet</button>
+    </div>
+    <div class="ui-row"><span class="ui-tag routine">routine</span><span class="ui-tag skill">skill</span><span class="ui-tag memory">memory</span><span class="ui-tag alert">alert</span><span class="ui-badge">3 new</span></div>
+  </section>
+  <section class="ui-card">
+    <h3>Facts</h3>
+    <dl class="ui-facts"><dt>When</dt><dd>weekly mon 08:00</dd><dt>Saves</dt><dd>About 30 minutes a week</dd></dl>
+  </section>
+  <div class="ui-grid" id="cards"></div>
+  <section class="ui-card"><h3>Comment box</h3><div id="comment"></div></section>
+</main>
+<script src="/ui/parts.js"></script>
+<script>
+const demo = UI.reviewCard({ title: "Review card", tag: "artifact", meta: "UI.reviewCard({...})",
+  body: "<p>Approve, change (opens the comment box) or skip. onChange gets {verdict, comment}.</p>",
+  onChange: s => UI.cart({ count: s.verdict ? 1 : 0, label: "reviewed", onCopy: () => UI.copy(UI.copyBack("Copy-back text:", [`- ${s.verdict} ${s.comment}`], "")) }) });
+document.querySelector("#cards").append(demo);
+document.querySelector("#comment").append(UI.commentBox({ placeholder: "UI.commentBox({placeholder, onInput})" }));
+</script>
+</body>
+</html>

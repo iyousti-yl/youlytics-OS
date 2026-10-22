@@ -26,8 +26,11 @@ ROUTER = OS_DIR / "router"
 ROUTINES = OS_DIR / "routines"
 INBOX = OS_DIR / "inbox.jsonl"
 RECOS = OS_DIR / "recos"
-PAGES = {"/recos": RECOS / "index.html"}  # local micro apps, each built from os/ui/
-TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json"}
+PAGES = {"/recos": RECOS / "index.html"}
+ARTIFACTS = ROOT / "artifacts"
+TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
+         ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".pdf": "application/pdf",
+         ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8"}
 
 runs = {}  # skill -> {"state", "started", "finished", "model", "effort", "log"}
 lock = threading.Lock()
@@ -208,6 +211,45 @@ def save_clip(c):
     return str(path.relative_to(ROOT))
 
 
+def micro_apps():
+    """Local micro apps: every os/<name>/ folder with an app.json and an index.html (built from os/ui/)."""
+    apps = []
+    for f in sorted(OS_DIR.glob("*/app.json")):
+        try:
+            meta = json.loads(f.read_text())
+        except json.JSONDecodeError:
+            continue
+        if (f.parent / "index.html").is_file():
+            apps.append({"name": f.parent.name, "title": meta.get("title", f.parent.name), "desc": meta.get("desc", "")})
+    return apps
+
+
+def review_items(days=14):
+    """Everything Claude made recently that waits for Issam's verdict: artifacts and reports."""
+    since = time.time() - days * 86400
+    items = []
+    index = ARTIFACTS / "index.html"
+    if index.is_file():
+        for m in re.finditer(r"\{([^{}]*path:\s*\"[^\"]+\"[^{}]*)\}", index.read_text()):
+            e = dict(re.findall(r'(\w+):\s*"((?:[^"\\]|\\.)*)"', m.group(1)))
+            f = ARTIFACTS / e.get("path", "")
+            if f.is_file() and f.stat().st_mtime >= since:
+                items.append({"key": f"artifacts/{e['path']}", "kind": "artifact", "title": e.get("title", e["path"]),
+                              "meta": f"{e.get('date', '')} · {e.get('type', '')}", "summary": e.get("summary", ""),
+                              "open": f"/artifacts/{e['path']}", "mtime": f.stat().st_mtime})
+    for folder, kind in ((REPORTS / "routines", "routine"), (REPORTS, "report")):
+        for f in folder.glob("*.md"):
+            if f.stat().st_mtime < since:
+                continue
+            rel = f.relative_to(REPORTS).as_posix()
+            items.append({"key": f"os/reports/{rel}", "kind": kind, "title": f.stem,
+                          "meta": datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M"),
+                          "text": f.read_text(errors="replace")[:4000], "open": f"/reports/{rel}",
+                          "mtime": f.stat().st_mtime})
+    items.sort(key=lambda i: -i["mtime"])
+    return items
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
@@ -242,13 +284,29 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
                                     "skills": skill_usage(), "routines": routines_state(),
-                                    "inbox": inbox(), "cache": cache_report(), "apps": apps_state()})
+                                    "inbox": inbox(), "cache": cache_report(), "apps": apps_state(),
+                                    "micro_apps": micro_apps()})
         path, _, query = self.path.partition("?")
         if path in PAGES:
             return self._send(200, PAGES[path].read_bytes(), TYPES[".html"])
         if path.startswith("/ui/"):
             f = OS_DIR / "ui" / Path(path).name
             if f.suffix in TYPES and f.is_file():
+                return self._send(200, f.read_bytes(), TYPES[f.suffix])
+        if path.startswith("/app/"):
+            f = OS_DIR / Path(path[5:]).name / "index.html"
+            if (f.parent / "app.json").is_file() and f.is_file():
+                return self._send(200, f.read_bytes(), TYPES[".html"])
+        if path.startswith("/api/data/"):
+            f = OS_DIR / Path(path[10:]).name / "data.json"
+            if (f.parent / "app.json").is_file():
+                return self._send(200, f.read_bytes() if f.is_file() else b"{}")
+        if path == "/api/review/items":
+            days = int(query.split("=")[1]) if query.startswith("days=") and query[5:].isdigit() else 14
+            return self._send(200, review_items(days))
+        if path.startswith("/artifacts/"):
+            f = (ARTIFACTS / path[len("/artifacts/"):]).resolve()
+            if f.is_relative_to(ARTIFACTS) and f.suffix in TYPES and f.is_file():
                 return self._send(200, f.read_bytes(), TYPES[f.suffix])
         if path == "/api/recos":
             f = RECOS / ("recos.example.json" if query == "example" else "recos.json")
@@ -272,6 +330,18 @@ class Handler(BaseHTTPRequestHandler):
             if not str(clip.get("url", "")).startswith(("http://", "https://")):
                 return self._send(400, {"error": "only web pages can be saved"})
             return self._send(200, {"ok": True, "file": save_clip(clip)})
+        if self.path.startswith("/api/data/") and self._same_origin():
+            f = OS_DIR / Path(self.path[10:]).name / "data.json"
+            size = int(self.headers.get("Content-Length", 0))
+            if not (f.parent / "app.json").is_file() or size > 2_000_000:
+                return self._send(400, {"error": "unknown app or too large"})
+            try:
+                data = json.loads(self.rfile.read(size) or b"{}")
+            except json.JSONDecodeError:
+                return self._send(400, {"error": "bad request"})
+            with lock:
+                f.write_text(json.dumps(data, indent=1))
+            return self._send(200, {"ok": True})
         if self.path not in POSTS or not self._same_origin():
             return self._send(403, {"error": "not allowed"})
         try:

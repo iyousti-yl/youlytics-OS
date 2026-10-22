@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics Review</title>
+<link rel="stylesheet" href="/ui/parts.css">
+<style>
+#lists{display:grid;gap:28px}
+.review-section{display:grid;gap:10px}
+.review-section h2{margin:0;font-size:18px}
+.ui-review .open{font-size:14px}
+</style>
+</head>
+<body>
+<main class="ui-page">
+  <header class="ui-header">
+    <h1>Review</h1>
+    <span class="ui-label" id="count"></span>
+    <span style="flex:1"></span>
+    <label class="ui-sub">Last <select id="days"><option>7</option><option selected>14</option><option>30</option></select> days</label>
+    <a href="/">Dashboard</a>
+  </header>
+  <p class="ui-sub">Everything Claude made recently that needs your verdict: decks and one-pagers in <code>artifacts/</code>, and reports from skills and routines. Approve, ask for a change with a comment, or skip. Your verdicts are saved as you go, then one button copies them back to Claude.</p>
+  <div id="lists"><p class="ui-empty">Loading…</p></div>
+</main>
+<script src="/ui/parts.js"></script>
+<script>
+const KIND = { artifact: "Artifacts", routine: "Routine reports", report: "Skill reports" };
+let items = [], data = { reviews: {} };
+
+const save = () => UI.save("/api/data/review", data);
+const open = () => items.filter(i => !(data.reviews[i.key] || {}).sent);
+const reviewed = () => open().filter(i => (data.reviews[i.key] || {}).verdict);
+
+function render() {
+  const root = document.querySelector("#lists");
+  root.innerHTML = "";
+  const todo = open();
+  document.querySelector("#count").textContent = `${todo.length} to review`;
+  for (const [kind, label] of Object.entries(KIND)) {
+    const list = todo.filter(i => i.kind === kind);
+    if (!list.length) continue;
+    const sec = document.createElement("section");
+    sec.className = "review-section";
+    sec.innerHTML = `<h2>${label}</h2><div class="ui-grid"></div>`;
+    for (const it of list) {
+      const r = data.reviews[it.key] || {};
+      const body = (it.summary ? `<p>${UI.esc(it.summary)}</p>` : "") + (it.text ? `<pre>${UI.esc(it.text)}</pre>` : "")
+        + `<a class="open" href="${UI.esc(it.open)}" target="_blank">Open ${it.kind === "artifact" ? "the artifact" : "the full report"}</a>`;
+      sec.querySelector(".ui-grid").append(UI.reviewCard({
+        title: it.title, tag: it.kind, meta: `${it.meta} · ${it.key}`, body, verdict: r.verdict || "", comment: r.comment || "",
+        onChange: s => { data.reviews[it.key] = { ...s, updated: new Date().toISOString() }; save(); cart(); },
+      }));
+    }
+    root.append(sec);
+  }
+  if (!todo.length) root.innerHTML = '<p class="ui-empty">Nothing waiting for review. New artifacts and reports show up here.</p>';
+  cart();
+}
+
+function cart() {
+  const done = reviewed();
+  UI.cart({
+    count: done.length, label: "reviewed", button: "Copy review for Claude",
+    onCopy: async () => {
+      const WORD = { approve: "APPROVED", change: "CHANGE", skip: "SKIP" };
+      const line = i => { const r = data.reviews[i.key]; return `- ${WORD[r.verdict]} ${i.key}${r.comment ? `: ${r.comment}` : ""}`; };
+      await UI.copy(UI.copyBack(
+        `Here is my review from the review app (${done.length} items). For each CHANGE, make the change in that file and show me the diff. Leave APPROVED and SKIP items as they are.`,
+        done.map(line),
+        "If a comment is a lesson for next time, offer /note or /calibrate for the skill that made it."));
+      const now = new Date().toISOString();
+      done.forEach(i => { data.reviews[i.key].sent = now; });
+      await save(); render();
+    },
+  });
+}
+
+async function load() {
+  const days = document.querySelector("#days").value;
+  [items, data] = await Promise.all([
+    fetch(`/api/review/items?days=${days}`).then(r => r.json()),
+    fetch("/api/data/review").then(r => r.json()),
+  ]);
+  data.reviews = data.reviews || {};
+  render();
+}
+document.querySelector("#days").addEventListener("change", load);
+load();
+</script>
+</body>
+</html>
