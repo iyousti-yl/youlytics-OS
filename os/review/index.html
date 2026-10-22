@@ -18,14 +18,14 @@
     <h1>Review</h1>
     <span class="ui-label" id="count"></span>
     <span style="flex:1"></span>
-    <label class="ui-sub">Last <select id="days"><option>7</option><option selected>14</option><option>30</option></select> days</label>
-    <a href="/">Dashboard</a>
+    <label class="ui-sub">Show the last <select id="days"><option>7</option><option selected>14</option><option>30</option></select> days</label>
   </header>
   <p class="ui-sub">Everything Claude made recently that needs your verdict: decks and one-pagers in <code>artifacts/</code>, and reports from skills and routines. Approve, ask for a change with a comment, or skip. Your verdicts are saved as you go, then one button copies them back to Claude.</p>
   <div id="lists"><p class="ui-empty">Loading…</p></div>
 </main>
 <script src="/ui/parts.js"></script>
 <script>
+UI.nav("Review");
 const KIND = { artifact: "Artifacts", routine: "Routine reports", report: "Skill reports" };
 let items = [], data = { reviews: {} };
 

@@ -28,7 +28,7 @@ canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .panel li button:focus-visible,.list button:focus-visible{outline:2px solid var(--accent)}
 .panel pre{margin:0;white-space:pre-wrap;font:12px/1.5 var(--f-mono);background:var(--mist);border-radius:8px;padding:10px;max-height:260px;overflow:auto}
 .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px;height:calc(100vh - 210px);min-height:420px;overflow:auto;display:grid;gap:14px;align-content:start}
-.list h3{margin:0 0 4px;font-size:14px;display:flex;gap:8px;align-items:center}
+.list h2{margin:0 0 4px;font-size:14px;display:flex;gap:8px;align-items:center}
 .list .n{margin-left:auto;font:12px var(--f-mono);color:var(--muted)}
 .view-toggle{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
 .view-toggle button{border:0;border-radius:0}
@@ -42,8 +42,6 @@ canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   <header class="ui-header">
     <h1>Brain</h1>
     <span class="ui-label" id="stats"></span>
-    <span style="flex:1"></span>
-    <a href="/">Dashboard</a>
   </header>
   <p class="ui-sub">Every file in the workspace and how they connect: links, imports, mentions of a skill, and the folders that hold them. Bigger dots have more links. Pick a file to see what it points to and what points to it.</p>
   <div class="brain-tools">
@@ -68,7 +66,7 @@ canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
       </div>
       <nav class="list" id="list" hidden aria-label="Files by area"></nav>
     </div>
-    <aside class="ui-card panel" id="panel" aria-live="polite">
+    <aside class="ui-card panel" id="panel" aria-label="Selected file">
       <h2>Pick a file</h2>
       <p class="ui-sub">Click a dot in the graph, use the List view, or search. The most connected files are the maps: <code>CLAUDE.md</code>, <code>AGENTS.md</code> and <code>MEMORY.md</code>.</p>
     </aside>
@@ -76,6 +74,7 @@ canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 </main>
 <script src="/ui/parts.js"></script>
 <script>
+UI.nav("Brain");
 const GROUPS = { core: "Maps and guides", knowledge: "Knowledge", business: "Business", life: "Life", memory: "Memory",
                  skills: "Skills", os: "OS machinery", brand: "Brand and artifacts" };
 const css = getComputedStyle(document.documentElement);
@@ -222,6 +221,7 @@ async function select(n, center = false) {
   p.querySelector("#copy").onclick = () => UI.copy(n.id);
   p.querySelectorAll("[data-id]").forEach(b => b.onclick = () => select(byId[b.dataset.id], true));
   if (center) { view.x = -n.x; view.y = -n.y; }
+  UI.say(n.kind === "folder" ? `${n.label}: holds ${kids.length}` : `${n.label}: points to ${nb.out.length}, pointed to by ${nb.inn.length}`);
   draw();
   if (n.kind === "file") {
     const r = await fetch(`/api/brain/file?path=${encodeURIComponent(n.id)}`);
@@ -236,7 +236,7 @@ function renderList() {
     const files = nodes.filter(n => n.group === g && n.kind === "file" && (!query || n.id.toLowerCase().includes(query)))
       .sort((a, b) => b.links - a.links);
     if (!files.length) return "";
-    return `<section><h3><span class="dot" style="background:${color(g)}"></span>${name}<span class="n">${files.length} ${files.length === 1 ? "file" : "files"}</span></h3><ul style="margin:0;padding:0;list-style:none">${
+    return `<section><h2><span class="dot" style="background:${color(g)}"></span>${name}<span class="n">${files.length} ${files.length === 1 ? "file" : "files"}</span></h2><ul style="margin:0;padding:0;list-style:none">${
       files.map(n => `<li><button type="button" data-id="${UI.esc(n.id)}">${UI.esc(n.label)} <span class="n">${n.links} ${n.links === 1 ? "link" : "links"} · ${UI.esc(n.id)}</span></button></li>`).join("")}</ul></section>`;
   }).join("") || '<p class="ui-empty">No files match.</p>';
   l.querySelectorAll("[data-id]").forEach(b => b.onclick = () => select(byId[b.dataset.id]));

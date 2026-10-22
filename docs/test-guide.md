@@ -61,5 +61,8 @@ Passes when both clips appear in `knowledge/reading/` with the source link and a
 **A3 Micro app.** Open **Review** on the dashboard. Mark the S1 artifact **Change** with a comment, approve a report, then **Copy review for Claude** and paste it into Claude Code.
 Passes when Claude makes the change and shows the diff, your verdicts survive a server restart (stop and start `os/server.py`, reload the page), and reviewed items leave the list. `/ui/gallery.html` shows the parts every app is built from.
 
+**Brain.** Open **Brain** in the top bar. Click `CLAUDE.md`, then follow a link in the side panel; search for `tone`; switch to **List** and move through it with Tab only.
+Passes when the side panel shows what the file points to and what points to it, the search fades everything else, and the List view reaches every file without a mouse. `python3 os/brain/graph.py` prints the same numbers as the header.
+
 ## When something fails
 Tell Claude Code what you saw, or park it with `/note <skill or app> <what went wrong>`. Small fixes go straight in; anything bigger comes back to you as a decision.

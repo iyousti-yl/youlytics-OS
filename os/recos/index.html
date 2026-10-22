@@ -17,8 +17,6 @@
   <header class="ui-header">
     <h1>Recos</h1>
     <span class="ui-label" id="week"></span>
-    <span style="flex:1"></span>
-    <a href="/">Dashboard</a>
   </header>
   <p class="ui-sub" id="summary">Loading…</p>
   <p class="ui-sub">Add the good ones to the cart, copy it and paste it into Claude Code before your usage resets. Claude sets up only what you picked.</p>
@@ -26,6 +24,7 @@
 </main>
 <script src="/ui/parts.js"></script>
 <script>
+UI.nav("Recos");
 const SECTIONS = [["routine", "Routines"], ["skill", "Skills"], ["memory", "Memory fixes"]];
 let data, cart, picked;
 
@@ -44,13 +43,15 @@ function render() {
       if (c.section === "routine") Object.assign(facts, { Mode: c.mode, Cap: `$${Number(c.cap_usd_week || 1).toFixed(2)} a week` });
       const el = document.createElement("article");
       el.className = "ui-card" + (on ? " is-picked" : "");
+      el.dataset.card = c.id;
       el.innerHTML = `<div class="ui-row"><span class="ui-tag ${c.section}">${c.section}</span><h3>${UI.esc(c.title)}</h3></div>
         <p>${UI.esc(c.what)}</p>
         <dl class="ui-facts">${Object.entries(facts).filter(([, v]) => v).map(([k, v]) => `<dt>${k}</dt><dd>${UI.esc(v)}</dd>`).join("")}</dl>
-        <div class="ui-row"><button class="ui-btn add" type="button" aria-pressed="${on}">${on ? "In the cart" : "Add to cart"}</button></div>`;
+        <div class="ui-row"><button class="ui-btn add" type="button" aria-pressed="${on}" aria-label="Add ${UI.esc(c.title)} to the cart">${on ? "In the cart" : "Add to cart"}</button></div>`;
       el.querySelector(".add").onclick = () => {
         picked = on ? picked.filter(x => x !== c.id) : [...picked, c.id];
         cart.set(picked); render();
+        document.querySelector(`[data-card="${c.id}"] .add`)?.focus();
       };
       sec.querySelector(".ui-grid").append(el);
     }

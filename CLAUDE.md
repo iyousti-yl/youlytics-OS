@@ -19,7 +19,7 @@ The memory catalog: @MEMORY.md
 
 - Mods: `.claude/statusline.py` is the status line (model, context, 5h/7d limits, cache warm or cold with the reload cost, branch). `os/chrome-clipper/` is a Chrome extension that saves pages to `knowledge/reading/` through the dashboard server. Clips are raw: summarise one when Issam asks.
 
-- Micro apps: local apps live in `os/<name>/` (`index.html` + `app.json`), are served at `/app/<name>` and are built only from the UI parts in `os/ui/`. Review work Issam does in chat every week belongs in one; `/micro-app` builds the next. `os/review/` reviews artifacts and reports; `os/recos/` holds Friday suggestions.
+- Micro apps: local apps live in `os/<name>/` (`index.html` + `app.json`), are served at `/app/<name>` and are built only from the UI parts in `os/ui/`. Review work Issam does in chat every week belongs in one; `/micro-app` builds the next. `os/review/` reviews artifacts and reports; `os/recos/` holds Friday suggestions; `os/brain/` maps every file and link (`python3 os/brain/graph.py` lists files nothing links to: give each a line in a router). Every page calls `UI.nav()` and passes the checks in `docs/ui-audit.md`.
 
 ## When a chat compacts, always keep
 - Decisions made and the reason for each

@@ -4,136 +4,250 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>youlytics-OS dashboard</title>
+<link rel="stylesheet" href="/ui/parts.css">
 <style>
-:root{--ink:#142033;--paper:#F4F6FA;--surface:#fff;--line:#D3DAE5;--muted:#4F5B6E;--accent:#1F3B70;--warn:#9a6b00;--bad:#c0392b;
-  --f:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace}
-body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--f)}
-main{max-width:880px;margin:0 auto;padding:40px 16px;display:grid;gap:20px}
-h1{margin:0;font-size:28px} h2{margin:0 0 8px;font-size:18px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:grid;gap:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-select,button{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
-button.run{background:var(--accent);color:#fff;border-color:var(--accent);cursor:pointer}
-button.run:disabled{opacity:.5;cursor:wait}
-.st{font:13px var(--mono);color:var(--muted)} .st.running{color:var(--warn)} .st.failed{color:var(--bad)} .st.done{color:var(--accent)}
-ul{margin:0;padding-left:1.2em} a{color:var(--accent)}
-table{border-collapse:collapse;width:100%;font-size:14px} th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
-.badge{background:#D9962B;color:#142033;border-radius:999px;padding:1px 8px;font:500 12px var(--mono)}
-.item{border-left:3px solid var(--line);padding:4px 10px} .item.unread{border-left-color:var(--accent)} .item.error,.item.cap{border-left-color:#9E2B3F}
-.item p{margin:2px 0} button.link{border:0;padding:0;background:none;color:var(--accent);cursor:pointer;font-size:13px}
-th{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em} .num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap} td .run{white-space:nowrap}
+.dash{max-width:1180px}
+.cols{display:grid;gap:var(--gap);grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);align-items:start}
+.col{display:grid;gap:var(--gap)}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+.ui-card h2{margin:0;font-size:18px;font-weight:600}
+.head{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.head .grow{flex:1}
+.inbox-item{border-left:3px solid var(--line);padding:6px 0 6px 12px;display:grid;gap:2px}
+.inbox-item.unread{border-left-color:var(--accent)}
+.inbox-item.error,.inbox-item.cap{border-left-color:var(--ruby)}
+.inbox-item p{margin:0}
+.inbox-item .when{font-size:13px;color:var(--muted)}
+.meter{height:6px;border-radius:3px;background:var(--mist);overflow:hidden;width:120px}
+.meter span{display:block;height:100%;background:var(--accent)}
+.meter.over span{background:var(--ruby)}
+.cost{display:grid;gap:4px;justify-items:end}
+.skill-run{display:grid;gap:8px}
+.skill-run select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-height:36px}
+.updated{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
-<main>
-  <h1>youlytics-OS dashboard</h1>
-  <p>Each button runs a skill in the background with <code>claude -p</code>. Pick the model and effort next to it.</p>
-  <p id="micro">Micro apps: loading…</p>
-  <section class="card">
-    <div class="row"><h2>Inbox</h2><span class="badge" id="unread" hidden></span><span style="flex:1"></span><button class="link" id="read-all" type="button">Mark all read</button></div>
-    <p class="st">Active routines always land here. Passive routines only land here when they find something.</p>
-    <div id="inbox"><p class="st">Nothing yet.</p></div>
-  </section>
-  <section class="card"><h2>Routines</h2>
-    <p class="st">Cost is the last 7 days in API-equivalent dollars against each routine's weekly cap. Over the cap, a routine is skipped. Schedule them with <code>python3 os/routines/run.py install</code>.</p>
-    <table id="routines"><thead><tr><th>Routine</th><th>Mode</th><th>Schedule</th><th>Last run</th><th>Week</th><th></th></tr></thead><tbody></tbody></table>
-  </section>
-  <section class="card">
-    <h2>Model routing</h2>
-    <div class="row">
-      <label><input type="checkbox" id="router-on"> Let the router pick the model when a button is set to auto</label>
+<main class="ui-page dash">
+  <header class="ui-header">
+    <h1>Dashboard</h1>
+    <span class="grow" style="flex:1"></span>
+    <span class="updated" id="updated" aria-hidden="true"></span>
+  </header>
+  <p class="ui-sub">What your OS did, what it costs, and what needs you. Routines and skills run in the background with <code>claude -p</code>.</p>
+
+  <section aria-label="At a glance" class="ui-stats" id="stats"></section>
+
+  <div class="cols">
+    <div class="col">
+      <section class="ui-card" id="inbox" aria-labelledby="inbox-h">
+        <div class="head"><h2 id="inbox-h">Inbox</h2><span class="ui-badge" id="unread" hidden></span><span class="grow"></span>
+          <button class="ui-btn quiet" type="button" id="read-all" hidden>Mark all read</button></div>
+        <p class="ui-sub">Active routines always report here. Passive routines only report when they find something.</p>
+        <div id="inbox-list"></div>
+      </section>
+      <section class="ui-card" id="routines" aria-labelledby="routines-h">
+        <h2 id="routines-h">Routines</h2>
+        <p class="ui-sub">Cost is the last 7 days at API prices, against each routine's weekly cap. A routine over its cap is skipped until next week. Schedule them with <code>python3 os/routines/run.py install --write</code>.</p>
+        <ul class="ui-rows" id="routine-list"></ul>
+      </section>
     </div>
-    <div class="st" id="router-stats">No routing calls yet.</div>
+    <div class="col">
+      <section class="ui-card" id="skills-run" aria-labelledby="run-h">
+        <h2 id="run-h">Run a skill</h2>
+        <div id="buttons"></div>
+      </section>
+      <section class="ui-card" id="apps" aria-labelledby="apps-h">
+        <h2 id="apps-h">Connected apps</h2>
+        <p class="ui-sub">How Claude reaches each app, lightest first. Add one with <code>/connect</code>.</p>
+        <ul class="ui-rows" id="app-list"></ul>
+      </section>
+      <section class="ui-card" id="cache" aria-labelledby="cache-h">
+        <h2 id="cache-h">Prompt cache, last 30 days</h2>
+        <p id="cache-text">Reading your sessions…</p>
+        <p class="ui-sub">Details: <code>python3 os/memory/cache.py</code>. The status line in Claude Code shows the cache live.</p>
+      </section>
+      <section class="ui-card" id="routing" aria-labelledby="routing-h">
+        <h2 id="routing-h">Model routing</h2>
+        <label class="ui-check"><input type="checkbox" id="router-on"> Let the router pick the model when a skill is set to auto</label>
+        <p class="ui-sub" id="router-stats">No routing calls yet.</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="ui-card" id="skills" aria-labelledby="skills-h">
+    <div class="head"><h2 id="skills-h">Skills, most used first</h2><span class="grow"></span>
+      <button class="ui-btn quiet" type="button" id="all-skills" aria-expanded="false" aria-controls="skills-table"></button></div>
+    <p class="ui-sub">From your Claude Code sessions in the last 90 days. Improve the top one with <code>/teach</code>; open notes wait for <code>/note apply</code>.</p>
+    <div class="ui-scroll" tabindex="0" role="region" aria-label="Skills table">
+      <table class="ui-table" id="skills-table"><thead><tr><th scope="col">Skill</th><th scope="col" class="n">Runs</th><th scope="col" class="n">Tokens</th><th scope="col" class="n">Open notes</th><th scope="col">Last used</th></tr></thead><tbody></tbody></table>
+    </div>
   </section>
-  <section class="card"><h2>Apps</h2>
-    <p class="st">How Claude reaches each app, lightest first. Add one with <code>/connect &lt;app&gt;</code>; check them with <code>python3 os/apps/check.py</code>.</p>
-    <table id="apps"><thead><tr><th>App</th><th>Way in</th><th>Last check</th></tr></thead><tbody></tbody></table>
+
+  <section class="ui-card" id="reports" aria-labelledby="reports-h">
+    <h2 id="reports-h">Latest reports</h2>
+    <ul class="ui-rows" id="report-list"></ul>
   </section>
-  <section class="card"><h2>Prompt cache, last 30 days</h2>
-    <p id="cache" class="st">Reading your sessions…</p>
-    <p class="st">Details: <code>python3 os/memory/cache.py</code>. Keep-warm pings: <code>python3 os/memory/keepwarm.py status</code>.</p>
-  </section>
-  <div id="buttons"></div>
-  <section class="card"><h2>Skills, most used first</h2>
-    <p class="st">From your Claude Code sessions in the last 90 days. Give the top one feedback and run /teach. Open notes wait for <code>/note apply</code>.</p>
-    <table id="skills"><thead><tr><th>Skill</th><th>Runs</th><th>Tokens</th><th>Open notes</th><th>Last used</th></tr></thead><tbody></tbody></table>
-  </section>
-  <section class="card"><h2>Latest reports</h2><ul id="reports"><li>None yet.</li></ul></section>
 </main>
+<script src="/ui/parts.js"></script>
 <script>
-const $ = s => document.querySelector(s);
-const opt = (vals, sel) => vals.map(v => `<option${v===sel?" selected":""}>${v}</option>`).join("");
-let built = false;
-async function refresh(){
-  const s = await (await fetch("/api/state")).json();
-  if (!built) {
-    $("#buttons").innerHTML = Object.entries(s.buttons).map(([k,b]) => `
-      <section class="card" data-skill="${k}">
-        <h2>${b.label}</h2>
-        <div class="row">
-          <button class="run" type="button">Run /${k}</button>
-          <label>Model <select class="m">${opt(["auto","haiku","sonnet","opus","codex"], b.default_model)}</select></label>
-          <label>Effort <select class="e">${opt(["auto","low","medium","high","xhigh","max"], b.default_effort)}</select></label>
-        </div>
-        <div class="st">Not run yet</div>
-      </section>`).join("");
-    document.querySelectorAll("[data-skill]").forEach(c => c.querySelector(".run").addEventListener("click", async () => {
-      const r = await fetch("/api/run", {method:"POST", headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({skill:c.dataset.skill, model:c.querySelector(".m").value, effort:c.querySelector(".e").value})});
-      if (!r.ok) alert((await r.json()).error);
-      refresh();
-    }));
-    built = true;
-  }
-  document.querySelectorAll("[data-skill]").forEach(c => {
-    const r = s.runs[c.dataset.skill], st = c.querySelector(".st");
-    c.querySelector(".run").disabled = r?.state === "running";
-    if (!r) return;
-    st.className = "st " + r.state;
-    st.textContent = r.state === "running" ? `Running on ${r.model}, ${r.effort} effort${r.routed ? " (" + r.routed + ")" : ""}…`
-      : `${r.state === "done" ? "Finished" : "Failed"} in ${r.seconds}s on ${r.model}. Log: ${r.log}`;
-  });
-  const rs = s.router.stats || {};
-  $("#router-on").checked = s.router.enabled;
-  $("#router-stats").textContent = rs.calls ? `${rs.calls} picks · ${rs.router_calls} by the router${rs.avg_router_ms ? ", avg " + rs.avg_router_ms + " ms" : ""} · $${rs.total_cost_usd} total · ` + Object.entries(rs.by_model).map(([m,n]) => `${m} ${Math.round(100*n/rs.calls)}%`).join(", ") : "No routing calls yet.";
-  const sk = (s.skills && s.skills.skills) || [];
-  $("#skills tbody").innerHTML = sk.map(r => `<tr><td>/${r.skill}</td><td class="num">${r.runs}</td><td class="num">${r.tokens.toLocaleString()}</td><td class="num">${r.notes || "–"}</td><td class="st">${r.last || "–"}</td></tr>`).join("");
-  const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
-  const ib = s.inbox || {items: [], unread: 0};
-  $("#unread").hidden = !ib.unread; $("#unread").textContent = `${ib.unread} new`;
-  $("#inbox").innerHTML = ib.items.length ? ib.items.map(i => `<div class="item ${i.read ? "" : "unread"} ${i.kind}">
-      <p><b>${esc(i.name)}</b> <span class="st">${esc(i.ts.replace("T", " "))} · ${i.mode}</span></p><p>${esc(i.headline)}</p>
-      <p>${i.file ? `<a href="/reports/${encodeURIComponent(i.file.replace("os/reports/", ""))}" target="_blank">Open the report</a> ` : ""}${i.read ? "" : `<button class="link" data-read="${esc(i.ts)}|${esc(i.id)}">Mark read</button>`}</p></div>`).join("")
-    : '<p class="st">Nothing yet.</p>';
-  $("#routines tbody").innerHTML = (s.routines || []).map(r => {
-    const l = r.last, pct = Math.min(100, Math.round(100 * r.cost / r.cap));
-    return `<tr><td>${esc(r.name)}${r.enabled ? "" : ' <span class="st">(off)</span>'}${r.setup_note ? `<div class="st">${esc(r.setup_note)}</div>` : ""}</td>
-      <td>${r.mode}</td><td class="st">${esc(r.schedule)}</td>
-      <td class="st">${l ? `${l.ts.slice(5, 16).replace("T", " ")} · ${l.ok ? (l.flagged ? "flagged" : "quiet") : "failed"}` : "–"}</td>
-      <td class="num" style="color:${pct >= 100 ? "#9E2B3F" : "inherit"}">$${r.cost.toFixed(2)} / $${r.cap.toFixed(2)}</td>
-      <td><button class="run" type="button" data-routine="${r.id}" ${r.running ? "disabled" : ""}>${r.running ? "Running…" : "Run now"}</button></td></tr>`;
-  }).join("");
-  $("#micro").innerHTML = "Micro apps: " + (s.micro_apps || []).map(a => `<a href="/app/${a.name}" title="${esc(a.desc)}">${esc(a.title)}</a>`).join(" · ");
-  $("#apps tbody").innerHTML = (s.apps || []).map(a => `<tr><td>${esc(a.name)}</td><td class="st">${a.way_in}</td>
-    <td style="color:${a.ok === false ? "#9E2B3F" : "inherit"}">${a.ok === true ? "ok" : a.ok === false ? "failed" : "in Claude Code"} <span class="st">${esc(a.detail)}</span></td></tr>`).join("");
-  const c = s.cache || {};
-  if (c.keep_warm) $("#cache").textContent = `${c.reloads} cold reloads in ${c.chats} chats, $${c.reload_extra_usd.toFixed(2)} extra at API prices. ` +
-    `Keeping chats warm would have cost $${c.keep_warm.ping_cost_usd.toFixed(2)} and saved $${c.keep_warm.saved_usd.toFixed(2)}: ` +
-    (c.keep_warm.pays ? "it pays" : "it does not pay") + `. Keep-warm is ${c.keep_warm.on ? "on" : "off"}.`;
-  $("#reports").innerHTML = s.reports.length ? s.reports.map(r => `<li><a href="/reports/${encodeURIComponent(r.name)}" target="_blank">${r.name}</a> <span class="st">${r.modified}</span></li>`).join("") : "<li>None yet.</li>";
+UI.nav("Dashboard");
+const $ = s => document.querySelector(s), esc = UI.esc;
+const seen = {};      // section -> last rendered JSON, so a section only re-renders when its data changed
+let showAll = false, lastRuns = {}, state = null;
+
+function render(key, data, fn) {
+  const json = JSON.stringify(data);
+  if (seen[key] === json) return;
+  seen[key] = json;
+  const active = document.activeElement?.dataset?.key;  // keep keyboard focus across re-renders
+  fn(data);
+  if (active) document.querySelector(`[data-key="${CSS.escape(active)}"]`)?.focus();
 }
-const post = (url, body) => fetch(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)});
+const plural = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+const money = v => `$${(v || 0).toFixed(2)}`;
+const when = ts => ts ? ts.replace("T", " ").slice(5, 16) : "never";
+
+function stats(s) {
+  const r = s.routines || [], on = r.filter(x => x.enabled), spent = r.reduce((a, x) => a + x.cost, 0), cap = on.reduce((a, x) => a + x.cap, 0);
+  const over = r.filter(x => x.cost >= x.cap), apps = s.apps || [], bad = apps.filter(a => a.ok === false), c = s.cache || {};
+  const tiles = [
+    { href: "#inbox", v: s.inbox?.unread ? `${s.inbox.unread} new` : "All read", k: "Inbox", cls: s.inbox?.unread ? "attention" : "" },
+    { href: "#routines", v: `${money(spent)} of ${money(cap)}`, k: `${plural(on.length, "routine")} on this week` + (over.length ? `, ${over.length} over cap` : ""), cls: over.length ? "alert" : "" },
+    { href: "#apps", v: bad.length ? `${bad.length} failing` : `${apps.filter(a => a.ok).length} of ${apps.length} working`, k: "Connected apps", cls: bad.length ? "alert" : "" },
+    { href: "#cache", v: c.keep_warm ? plural(c.reloads, "cold reload") : "…", k: c.keep_warm ? `${money(c.reload_extra_usd)} extra at API prices` : "Prompt cache" },
+  ];
+  $("#stats").innerHTML = tiles.map(t => `<a class="ui-stat ${t.cls}" href="${t.href}"><span class="v">${esc(t.v)}</span><span class="k">${esc(t.k)}</span></a>`).join("");
+}
+
+function inbox(ib) {
+  $("#unread").hidden = !ib.unread; $("#unread").textContent = `${ib.unread} new`;
+  $("#read-all").hidden = !ib.unread;
+  $("#inbox-list").innerHTML = ib.items.length ? ib.items.map(i => `
+    <article class="inbox-item ${i.read ? "" : "unread"} ${i.kind}">
+      <p><strong>${esc(i.name)}</strong> <span class="when">${esc(when(i.ts))} · ${i.mode}${i.read ? "" : '<span class="sr-only">, unread</span>'}</span></p>
+      <p>${i.kind === "cap" || i.kind === "error" ? '<span class="ui-status bad">' : "<span>"}${esc(i.headline)}</span></p>
+      <div class="ui-row">${i.file ? `<a href="/reports/${encodeURIComponent(i.file.replace("os/reports/", "")).replace("%2F", "/")}" target="_blank" rel="noopener">Open the report<span class="sr-only"> from ${esc(i.name)} (new tab)</span></a>` : ""}
+        ${i.read ? "" : `<button class="ui-btn quiet small" type="button" data-key="read-${esc(i.ts)}-${esc(i.id)}" data-read="${esc(i.ts)}|${esc(i.id)}">Mark read<span class="sr-only">: ${esc(i.name)}</span></button>`}</div>
+    </article>`).join("") : '<p class="ui-sub">Nothing yet. Results from routines show up here.</p>';
+}
+
+function routines(rows) {
+  $("#routine-list").innerHTML = rows.map(r => {
+    const l = r.last, pct = Math.min(100, Math.round(100 * r.cost / r.cap)), over = r.cost >= r.cap;
+    const last = l ? `last run ${when(l.ts)}, ${l.ok ? (l.flagged ? "flagged something" : "nothing to flag") : "failed"}` : "not run yet";
+    return `<li>
+      <div class="main"><strong>${esc(r.name)}</strong>
+        <span class="meta">${r.enabled ? "" : "Off until set up · "}${r.mode === "passive" ? "quiet unless it finds something" : "always reports"} · ${esc(r.schedule)} · ${last}</span>
+        ${r.setup_note ? `<span class="meta">${esc(r.setup_note)}</span>` : ""}</div>
+      <div class="cost"><span class="ui-num">${money(r.cost)} of ${money(r.cap)}${over ? ' <span class="ui-status bad">over cap</span>' : ""}</span>
+        <span class="meter ${over ? "over" : ""}" aria-hidden="true"><span style="width:${pct}%"></span></span></div>
+      <button class="ui-btn primary" type="button" data-key="routine-${r.id}" data-routine="${r.id}" ${r.running ? "disabled" : ""}>${r.running ? "Running…" : "Run now"}<span class="sr-only">: ${esc(r.name)}</span></button>
+    </li>`;
+  }).join("");
+}
+
+function buttons(b) {
+  $("#buttons").innerHTML = Object.entries(b).map(([k, x]) => `
+    <div class="skill-run" data-skill="${k}">
+      <strong>${esc(x.label)}</strong>
+      <div class="ui-row">
+        <button class="ui-btn primary run" type="button" data-key="skill-${k}">Run /${k}</button>
+        <label>Model <select class="m">${["auto", "haiku", "sonnet", "opus", "codex"].map(v => `<option${v === x.default_model ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+        <label>Effort <select class="e">${["auto", "low", "medium", "high", "xhigh", "max"].map(v => `<option${v === x.default_effort ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+      </div>
+      <p class="ui-sub" role="status" id="status-${k}">Not run yet.</p>
+    </div>`).join("");
+}
+
+function runStates(runs) {
+  for (const [k, r] of Object.entries(runs)) {
+    const st = $(`#status-${CSS.escape(k)}`), btn = document.querySelector(`[data-skill="${CSS.escape(k)}"] .run`);
+    if (!st) continue;
+    btn.disabled = r.state === "running";
+    st.innerHTML = r.state === "running" ? `<span class="ui-status busy">Running on ${r.model}, ${r.effort} effort${r.routed ? ` (picked by ${r.routed})` : ""}…</span>`
+      : `<span class="ui-status ${r.state === "done" ? "ok" : "bad"}">${r.state === "done" ? "Finished" : "Failed"} in ${r.seconds}s on ${r.model}.</span> <a href="/reports/${encodeURIComponent(r.log)}" target="_blank" rel="noopener">Log</a>`;
+    if (lastRuns[k] === "running" && r.state !== "running") UI.say(`/${k} ${r.state === "done" ? "finished" : "failed"}`);
+    lastRuns[k] = r.state;
+  }
+}
+
+function apps(rows) {
+  $("#app-list").innerHTML = rows.length ? rows.map(a => `<li><div class="main"><strong>${esc(a.name)}</strong><span class="meta">${a.way_in} · ${esc(a.detail)}</span></div>
+    <span class="ui-status ${a.ok === true ? "ok" : a.ok === false ? "bad" : ""}">${a.ok === true ? "Works" : a.ok === false ? "Failing" : "Check in Claude Code"}</span></li>`).join("")
+    : '<li><span class="ui-sub">None yet. Run /connect in Claude Code.</span></li>';
+}
+
+function cache(c) {
+  if (!c.keep_warm) return;
+  const kw = c.keep_warm;
+  $("#cache-text").textContent = `${plural(c.reloads, "time")} in ${plural(c.chats, "chat")} a cold cache made the next message reload the chat: ${money(c.reload_extra_usd)} extra at API prices. ` +
+    `Keeping idle chats warm would have cost ${money(kw.ping_cost_usd)} and saved ${money(kw.saved_usd)}, so it ${kw.pays ? "pays" : "doesn't pay"}. Keep-warm is ${kw.on ? "on" : "off"}.`;
+}
+
+function routing(r) {
+  $("#router-on").checked = r.enabled;
+  const rs = r.stats || {};
+  $("#router-stats").textContent = rs.calls ? `${plural(rs.calls, "pick")}, ${rs.router_calls} by the router${rs.avg_router_ms ? `, ${rs.avg_router_ms} ms on average` : ""}, ${money(rs.total_cost_usd)} in total. ` +
+    Object.entries(rs.by_model).map(([m, n]) => `${m} ${Math.round(100 * n / rs.calls)}%`).join(", ") + "." : "No routing calls yet.";
+}
+
+function skills(sk) {
+  const used = sk.filter(r => r.runs || r.notes), list = showAll || !used.length ? sk : used;
+  $("#all-skills").textContent = showAll ? "Show used skills only" : `Show all ${sk.length} skills`;
+  $("#all-skills").setAttribute("aria-expanded", String(showAll));
+  $("#all-skills").hidden = !used.length || used.length === sk.length;
+  $("#skills-table tbody").innerHTML = list.map(r => `<tr><td>/${esc(r.skill)}</td><td class="n ui-num">${r.runs}</td><td class="n ui-num">${r.tokens.toLocaleString()}</td>
+    <td class="n ui-num">${r.notes || "–"}</td><td class="ui-num">${r.last || "–"}</td></tr>`).join("");
+}
+
+function reports(list) {
+  $("#report-list").innerHTML = list.length ? list.map(r => `<li><a href="/reports/${encodeURIComponent(r.name)}" target="_blank" rel="noopener">${esc(r.name)}</a><span class="meta">${r.modified}</span></li>`).join("")
+    : '<li><span class="ui-sub">None yet. Skills write their reports to os/reports/.</span></li>';
+}
+
+async function refresh() {
+  try { state = await (await fetch("/api/state")).json(); }
+  catch { $("#updated").textContent = "Can't reach os/server.py"; return; }
+  render("stats", [state.inbox, state.routines, state.apps, state.cache], () => stats(state));
+  render("inbox", state.inbox, inbox);
+  render("routines", state.routines || [], routines);
+  render("buttons", state.buttons, buttons);
+  runStates(state.runs);
+  render("apps", state.apps || [], apps);
+  render("cache", state.cache || {}, cache);
+  render("routing", state.router, routing);
+  render("skills", [(state.skills && state.skills.skills) || [], showAll], ([sk]) => skills(sk));
+  render("reports", state.reports, reports);
+  $("#updated").textContent = `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+}
+
+const post = (url, body) => fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 document.addEventListener("click", async e => {
-  const t = e.target;
-  if (t.dataset.read) { const [ts, id] = t.dataset.read.split("|"); await post("/api/inbox/read", {ts, id}); refresh(); }
-  if (t.dataset.routine) { t.disabled = true; const r = await post("/api/routines/run", {id: t.dataset.routine}); if (!r.ok) alert((await r.json()).error); refresh(); }
-  if (t.id === "read-all") { await post("/api/inbox/read", {all: true}); refresh(); }
+  const t = e.target.closest("button");
+  if (!t) return;
+  if (t.dataset.read) { const [ts, id] = t.dataset.read.split("|"); await post("/api/inbox/read", { ts, id }); UI.say("Marked read"); refresh(); }
+  if (t.dataset.routine) {
+    t.disabled = true;
+    const r = await post("/api/routines/run", { id: t.dataset.routine });
+    if (!r.ok) UI.toast((await r.json()).error); else UI.say("Routine started. Its result will show in the inbox.");
+    refresh();
+  }
+  if (t.id === "read-all") { await post("/api/inbox/read", { all: true }); UI.say("All marked read"); refresh(); }
+  if (t.id === "all-skills") { showAll = !showAll; refresh(); }
+  if (t.classList.contains("run")) {
+    const c = t.closest("[data-skill]");
+    const r = await post("/api/run", { skill: c.dataset.skill, model: c.querySelector(".m").value, effort: c.querySelector(".e").value });
+    if (!r.ok) UI.toast((await r.json()).error); else UI.say(`/${c.dataset.skill} started`);
+    refresh();
+  }
 });
-$("#router-on").addEventListener("change", async e => {
-  await fetch("/api/router", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({enabled: e.target.checked})});
-  refresh();
-});
-refresh(); setInterval(refresh, 3000);
+$("#router-on").addEventListener("change", async e => { await post("/api/router", { enabled: e.target.checked }); UI.say(`Routing ${e.target.checked ? "on" : "off"}`); refresh(); });
+
+let timer;
+function poll() { clearInterval(timer); if (!document.hidden) { refresh(); timer = setInterval(refresh, 4000); } }
+document.addEventListener("visibilitychange", poll);
+poll();
 </script>
 </body>
 </html>

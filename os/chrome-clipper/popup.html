@@ -10,15 +10,18 @@ h1{margin:0;font-size:15px;font-weight:600;display:flex;gap:8px;align-items:cent
 textarea{width:100%;box-sizing:border-box;min-height:60px;resize:vertical;font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px}
 button{font:inherit;font-weight:500;padding:8px 12px;border-radius:8px;border:1px solid var(--sapphire);background:var(--sapphire);color:#fff;cursor:pointer}
 button:disabled{opacity:.5}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--sapphire);outline-offset:2px}
+.lbl{font-size:13px;color:var(--muted);margin-bottom:-6px}
 #status{margin:0;font-size:13px;color:var(--muted)} #status.bad{color:var(--ruby)}
 </style>
 </head>
 <body>
   <h1><img src="icon-16.png" alt="" width="16" height="16">Save to youlytics</h1>
   <p id="title"></p>
+  <label for="note" class="lbl">Note</label>
   <textarea id="note" placeholder="Why it's worth keeping (optional)"></textarea>
   <button id="save" type="button">Save to knowledge/reading</button>
-  <p id="status">Needs the dashboard running: python3 os/server.py</p>
+  <p id="status" role="status">Needs the dashboard running: python3 os/server.py</p>
   <script src="popup.js"></script>
 </body>
 </html>

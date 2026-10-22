@@ -18,7 +18,7 @@ Start from the department router, then open only the file you need.
 - `os/` holds the local dashboard (`python3 os/server.py`, http://127.0.0.1:8765) and the machinery behind it:
   - `os/router/` and `os/ask`: model routing
   - `os/routines/`: scheduled routines, their caps and run log; results go to the dashboard inbox
-  - `os/recos/`: Friday suggestions; `os/review/`: the review micro app; `os/ui/`: UI parts every micro app is built from
+  - `os/recos/`: Friday suggestions; `os/review/`: the review micro app; `os/ui/`: UI parts every micro app is built from; `os/brain/`: the Brain map of every file and how they link
   - `os/memory/`: cold-cache report and keep-warm pings
   - `os/apps/apps.json`: how each outside app is reached; `os/chrome-clipper/`: the browser extension
   - `os/skills/usage.py`: skill usage ranking
