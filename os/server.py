@@ -28,6 +28,8 @@ INBOX = OS_DIR / "inbox.jsonl"
 RECOS = OS_DIR / "recos"
 PAGES = {"/recos": RECOS / "index.html"}
 ARTIFACTS = ROOT / "artifacts"
+sys.path.insert(0, str(OS_DIR / "brain"))
+import graph as brain  # noqa: E402
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
          ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".pdf": "application/pdf",
          ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8"}
@@ -307,6 +309,13 @@ class Handler(BaseHTTPRequestHandler):
             f = OS_DIR / Path(path[10:]).name / "data.json"
             if (f.parent / "app.json").is_file():
                 return self._send(200, f.read_bytes() if f.is_file() else b"{}")
+        if path == "/api/brain":
+            return self._send(200, brain.build())
+        if path == "/api/brain/file":
+            from urllib.parse import parse_qs
+            text = brain.preview(parse_qs(query).get("path", [""])[0])
+            if text is not None:
+                return self._send(200, text.encode(), TYPES[".txt"])
         if path == "/api/review/items":
             days = int(query.split("=")[1]) if query.startswith("days=") and query[5:].isdigit() else 14
             return self._send(200, review_items(days))
