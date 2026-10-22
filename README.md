@@ -14,13 +14,15 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
    `python3 os/router/route.py --test` checks the setup, `on`/`off` switches routing, and `stats` shows picks, speed and cost.
 6. Skills get better from feedback: after a skill's output, tell Claude what missed and run `/teach`. `python3 os/skills/usage.py` shows which skills you use most and what they cost in tokens.
 
-7. Routines: `python3 os/routines/run.py list` shows them; `run <id>` runs one now; `install` prints the line that runs due routines every 15 minutes (cron on Mac/Linux, Task Scheduler on Windows). Results land in the dashboard inbox. `/routines-review` sorts them into active and passive, and `/cap-routine` trims the most expensive one.
+7. Routines: `python3 os/routines/run.py list` shows them; `run <id>` runs one now; `install --write` schedules due routines every 15 minutes on a Mac (launchd; on Linux and Windows `install` prints the cron or Task Scheduler line). Results land in the dashboard inbox. `/routines-review` sorts them into active and passive, and `/cap-routine` trims the most expensive one.
 8. Every Friday at 08:00 the `weekly-recos` routine runs `/suggest-routines`: it reads your week of sessions, spots jobs you did by hand 3 or more times and puts cards on http://127.0.0.1:8765/recos. Add the good ones to the cart, copy it and paste it into Claude Code. `/recos?example` shows example cards.
-9. Long chats: `python3 os/memory/cache.py` shows the last 30 days of cold-cache reloads and what keeping chats warm would have saved. Only if it pays: `python3 os/memory/keepwarm.py on`, then schedule it with `keepwarm.py install`.
+9. Long chats: `python3 os/memory/cache.py` shows the last 30 days of cold-cache reloads and what keeping chats warm would have saved. Only if it pays: `python3 os/memory/keepwarm.py on`, then schedule it with `keepwarm.py install --write`.
 10. Never correct Claude twice: type `/note <skill> <feedback>` mid-job to park a fix in that skill's `NOTES.md`, then `/note apply` when you're ready (it runs on haiku). For lessons that matter, `/calibrate` saves the rule to `memory/`, links it and fixes the skill, after you approve.
 11. Apps: `/connect <app>` finds the lightest way in for any app (maker's tools, then a CLI, then the API, then an MCP), tests it with one real read and adds it to `os/apps/apps.json`. If it needs a key, you add it to `.env` yourself. `python3 os/apps/check.py` re-tests them all.
 12. Mods: the status line turns on by itself in this folder (`.claude/settings.json`; on Windows, change `python3` to `python` there). The Chrome clipper saves pages to `knowledge/reading/` with one click or a right-click; load it from `os/chrome-clipper/` (steps in its README).
 13. Micro apps: the dashboard links them. **Review** (`/app/review`) lists the artifacts and reports Claude made in the last two weeks; approve, change with a comment, or skip, then copy your review back to Claude. Verdicts are saved to `os/review/data.json`. `/micro-app` gives the next repeated job its own app, built from the parts in `os/ui/` (see `/ui/gallery.html`).
+
+To test everything end to end, follow [docs/test-guide.md](docs/test-guide.md).
 
 ## What's built
 | Level | What |

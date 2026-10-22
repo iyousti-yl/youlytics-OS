@@ -6,7 +6,7 @@
   python3 os/routines/run.py due             run every routine that is due (the scheduler calls this)
   python3 os/routines/run.py costs           routines ranked by cost over the last 7 days
   python3 os/routines/run.py enable <id>     switch a routine on (disable <id> switches it off)
-  python3 os/routines/run.py install         show how to run `due` every 15 minutes
+  python3 os/routines/run.py install         show how to run `due` every 15 minutes (--write sets it up on a Mac)
 
 Routines live in os/routines/routines.json.
 - active routines always put their output in the inbox for Issam to review.
@@ -16,7 +16,6 @@ Routines live in os/routines/routines.json.
 Each run is logged to os/routines/runs.jsonl with its cost and tokens.
 """
 import json
-import os
 import platform
 import shutil
 import subprocess
@@ -241,13 +240,9 @@ def main(argv):
         print(f"{argv[1]} {cmd}d.")
         return 0
     if cmd == "install":
-        py, script = sys.executable, Path(__file__).resolve()
-        if platform.system() == "Windows":
-            print(f'schtasks /Create /SC MINUTE /MO 15 /TN youlytics-routines /TR "{py} {script} due"')
-        else:
-            print("Add this line with `crontab -e` (runs due routines every 15 minutes):")
-            print(f"*/15 * * * * cd {ROOT} && PATH={os.environ.get('PATH', '/usr/bin:/bin')} {py} {script} due >> {HERE / 'cron.log'} 2>&1")
-        return 0
+        import schedule
+        return schedule.install("com.youlytics.routines", Path(__file__).resolve(), "due", 15,
+                                HERE / "cron.log", "--write" in argv)
     print(__doc__.strip())
     return 1
 

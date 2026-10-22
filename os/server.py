@@ -271,7 +271,13 @@ class Handler(BaseHTTPRequestHandler):
         origin = self.headers.get("Origin")
         return origin in (None, f"http://{HOST}:{PORT}", f"http://localhost:{PORT}")
 
+    def _local_host(self):
+        """Refuse requests whose Host isn't this server (blocks DNS-rebinding pages)."""
+        return self.headers.get("Host") in (f"{HOST}:{PORT}", f"localhost:{PORT}")
+
     def do_GET(self):
+        if not self._local_host():
+            return self._send(403, {"error": "not allowed"})
         if self.path in ("/", "/index.html"):
             return self._send(200, (OS_DIR / "dashboard.html").read_bytes(), "text/html; charset=utf-8")
         if self.path == "/api/state":
@@ -320,6 +326,8 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
+        if not self._local_host():
+            return self._send(403, {"error": "not allowed"})
         if self.path == "/api/clip":  # only the Chrome clipper (an extension origin) may save clips
             if not (self.headers.get("Origin") or "").startswith("chrome-extension://"):
                 return self._send(403, {"error": "not allowed"})

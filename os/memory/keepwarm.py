@@ -4,7 +4,7 @@
   python3 os/memory/keepwarm.py status     on or off, chats it would ping now, recent pings
   python3 os/memory/keepwarm.py on | off   switch it (run cache.py first: only turn it on if it pays)
   python3 os/memory/keepwarm.py tick       ping every chat that is due (the scheduler calls this)
-  python3 os/memory/keepwarm.py install    show how to run `tick` every 10 minutes
+  python3 os/memory/keepwarm.py install    show how to run `tick` every 10 minutes (--write sets it up on a Mac)
 
 A prompt cache belongs to one chat on one model, so the ping resumes that chat on the same
 model. It runs as a fork (`--fork-session`) so the chat itself gets no extra message, and the
@@ -14,8 +14,6 @@ fork's transcript is deleted after the ping. A chat is pinged when it has been i
 of reading it, the ping missed, so that chat is not pinged again and the miss is logged.
 """
 import json
-import os
-import platform
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -123,13 +121,10 @@ def main(argv):
                                                           f"read {r.get('read', 0):,} tokens, ${r.get('cost', 0):.4f}"))
         return 0
     if cmd == "install":
-        py, script = sys.executable, Path(__file__).resolve()
-        if platform.system() == "Windows":
-            print(f'schtasks /Create /SC MINUTE /MO 10 /TN youlytics-keepwarm /TR "{py} {script} tick"')
-        else:
-            print("Add this line with `crontab -e`:")
-            print(f"*/10 * * * * PATH={os.environ.get('PATH', '/usr/bin:/bin')} {py} {script} tick >> {HERE / 'keepwarm.log'} 2>&1")
-        return 0
+        sys.path.insert(0, str(HERE.parent / "routines"))
+        import schedule
+        return schedule.install("com.youlytics.keepwarm", Path(__file__).resolve(), "tick", 10,
+                                HERE / "keepwarm.log", "--write" in argv)
     print(__doc__.strip())
     return 1
 

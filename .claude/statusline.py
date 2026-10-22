@@ -9,7 +9,7 @@ import json
 import subprocess
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 AMBER, RUBY, DIM, RESET = "\033[38;2;217;150;43m", "\033[38;2;224;122;140m", "\033[2m", "\033[0m"
