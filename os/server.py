@@ -68,6 +68,21 @@ def run_skill(skill, cfg, model, effort):
                            seconds=round(time.time() - started), log=log.name)
 
 
+_skills_cache = {"at": 0, "data": {}}
+
+
+def skill_usage():
+    """Skill runs and tokens from os/skills/usage.py, refreshed at most once a minute."""
+    if time.time() - _skills_cache["at"] > 60:
+        out = subprocess.run([sys.executable, str(OS_DIR / "skills" / "usage.py"), "--json"],
+                             cwd=ROOT, capture_output=True, text=True)
+        try:
+            _skills_cache.update(at=time.time(), data=json.loads(out.stdout))
+        except json.JSONDecodeError:
+            _skills_cache.update(at=time.time(), data={})
+    return _skills_cache["data"]
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
@@ -97,7 +112,8 @@ class Handler(BaseHTTPRequestHandler):
             stats = json.loads(subprocess.run([sys.executable, str(ROUTER / "route.py"), "stats"],
                                               cwd=ROOT, capture_output=True, text=True).stdout or "{}")
             return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
-                                    "router": {"enabled": router.get("enabled", True), "stats": stats}})
+                                    "router": {"enabled": router.get("enabled", True), "stats": stats},
+                                    "skills": skill_usage()})
         if self.path.startswith("/reports/"):
             name = Path(self.path[len("/reports/"):]).name
             f = REPORTS / name
