@@ -15,6 +15,7 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
 6. Skills get better from feedback: after a skill's output, tell Claude what missed and run `/teach`. `python3 os/skills/usage.py` shows which skills you use most and what they cost in tokens.
 
 7. Routines: `python3 os/routines/run.py list` shows them; `run <id>` runs one now; `install` prints the line that runs due routines every 15 minutes (cron on Mac/Linux, Task Scheduler on Windows). Results land in the dashboard inbox. `/routines-review` sorts them into active and passive, and `/cap-routine` trims the most expensive one.
+8. Every Friday at 08:00 the `weekly-recos` routine runs `/suggest-routines`: it reads your week of sessions, spots jobs you did by hand 3 or more times and puts cards on http://127.0.0.1:8765/recos. Add the good ones to the cart, copy it and paste it into Claude Code. `/recos?example` shows example cards.
 
 ## What's built
 | Level | What |
@@ -25,3 +26,4 @@ Issam's Agentic OS: a plain-text workspace that Claude Code runs on, organised w
 | S1 Skill types | `/tone` database skill with `/wildcard` (8 of 10 follow references, 2 wildcards), `/brand` artifact skill with `brand/brand-book.html` and `artifacts/index.html`, `/clean-up` self-triggered skill with the local dashboard |
 | R1 Active vs passive routines | `os/routines/` registry and runner; active routines always post to the inbox, passive ones only when they flag something; desktop notification; `/routines-review`; starter routines: machine care, brand watch, domain scout, Gmail digest (off until the connector is named) |
 | R2 Capped routines | Weekly USD cap per routine, enforced as the run's budget; cost and tokens logged per run; `run.py costs` and the dashboard show week cost against cap; `/cap-routine` |
+| R3 Routines that suggest routines | `os/recos/collect.py` gathers the week's typed prompts locally; `/suggest-routines` writes routine, skill and memory cards to `os/recos/recos.json`; the Recos page (built from the `os/ui/` parts) has a cart that copies the picks back to Claude |

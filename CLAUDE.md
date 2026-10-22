@@ -4,7 +4,7 @@ The map and the rules shared with Codex: @AGENTS.md
 The memory catalog: @MEMORY.md
 
 ## Claude Code only
-- Skills: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`, `/teach`, `/routines-review`, `/cap-routine` in `.claude/skills/`.
+- Skills: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`, `/teach`, `/routines-review`, `/cap-routine`, `/suggest-routines` in `.claude/skills/`.
 - Skills improve from feedback. When Issam corrects or rates a skill's output, offer `/teach` in one line; never change a skill silently. Each skill keeps a `CHANGELOG.md`.
 - `python3 os/skills/usage.py` ranks skills by runs and tokens from local sessions. Improve the most-used skill first.
 - Every new fixed-step skill gets `model: haiku` and `effort: low` in its frontmatter. Use sonnet or opus only when the skill needs judgement.

@@ -24,6 +24,9 @@ EFFORTS = {"low", "medium", "high", "xhigh", "max", "auto"}
 ROUTER = OS_DIR / "router"
 ROUTINES = OS_DIR / "routines"
 INBOX = OS_DIR / "inbox.jsonl"
+RECOS = OS_DIR / "recos"
+PAGES = {"/recos": RECOS / "index.html"}  # local micro apps, each built from os/ui/
+TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json"}
 
 runs = {}  # skill -> {"state", "started", "finished", "model", "effort", "log"}
 lock = threading.Lock()
@@ -176,6 +179,16 @@ class Handler(BaseHTTPRequestHandler):
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
                                     "skills": skill_usage(), "routines": routines_state(),
                                     "inbox": inbox()})
+        path, _, query = self.path.partition("?")
+        if path in PAGES:
+            return self._send(200, PAGES[path].read_bytes(), TYPES[".html"])
+        if path.startswith("/ui/"):
+            f = OS_DIR / "ui" / Path(path).name
+            if f.suffix in TYPES and f.is_file():
+                return self._send(200, f.read_bytes(), TYPES[f.suffix])
+        if path == "/api/recos":
+            f = RECOS / ("recos.example.json" if query == "example" else "recos.json")
+            return self._send(200, f.read_bytes() if f.is_file() else b"{}")
         if self.path.startswith("/reports/"):
             rel = self.path[len("/reports/"):]
             sub = REPORTS / "routines" if rel.startswith("routines/") else REPORTS

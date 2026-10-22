@@ -12,3 +12,5 @@ os/routines/cron.log
 os/inbox.jsonl
 os/reports/routines/
 os/reports/*.md
+os/recos/recos.json
+os/recos/week-prompts.json
