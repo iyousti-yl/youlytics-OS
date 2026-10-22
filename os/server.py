@@ -7,6 +7,7 @@ Only skills listed in os/buttons.json can be run, with the tools listed there.
 Routines come from os/routines/routines.json and run through os/routines/run.py.
 """
 import json
+import re
 import subprocess
 import sys
 import threading
@@ -174,6 +175,39 @@ def apps_state():
     return _apps_cache["data"]
 
 
+READING = ROOT / "knowledge" / "reading"
+
+
+def save_clip(c):
+    """Write one clip from the Chrome clipper to knowledge/reading/ and index it."""
+    title = " ".join(str(c.get("title") or "Untitled").split())[:140]
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:60] or "clip"
+    day = datetime.now().strftime("%Y-%m-%d")
+    path = READING / f"{day}-{slug}.md"
+    n = 2
+    while path.exists():
+        path = READING / f"{day}-{slug}-{n}.md"
+        n += 1
+    url = str(c.get("url") or "")
+    parts = [f"# {title}", "", f"Source: {url}", f"Site: {c.get('site') or ''} · saved {datetime.now():%Y-%m-%d %H:%M} with the clipper", ""]
+    if c.get("note"):
+        parts += ["## Why I saved it", "", str(c["note"]).strip(), ""]
+    if c.get("description"):
+        parts += ["## Description", "", str(c["description"]).strip(), ""]
+    if c.get("selection"):
+        parts += ["## Selection", "", "> " + str(c["selection"]).strip().replace("\n", "\n> "), ""]
+    if c.get("text"):
+        parts += ["## Page text", "", str(c["text"]).strip(), ""]
+    READING.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(parts))
+    index = READING / "index.md"
+    if not index.is_file():
+        index.write_text("# Reading index\n\nOne line per saved item, newest last.\n\n")
+    with open(index, "a") as f:
+        f.write(f"- {day} [{title}]({path.name}): {(c.get('note') or c.get('description') or url)[:140]}\n")
+    return str(path.relative_to(ROOT))
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
@@ -228,6 +262,16 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, {"error": "not found"})
 
     def do_POST(self):
+        if self.path == "/api/clip":  # only the Chrome clipper (an extension origin) may save clips
+            if not (self.headers.get("Origin") or "").startswith("chrome-extension://"):
+                return self._send(403, {"error": "not allowed"})
+            try:
+                clip = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            except json.JSONDecodeError:
+                return self._send(400, {"error": "bad request"})
+            if not str(clip.get("url", "")).startswith(("http://", "https://")):
+                return self._send(400, {"error": "only web pages can be saved"})
+            return self._send(200, {"ok": True, "file": save_clip(clip)})
         if self.path not in POSTS or not self._same_origin():
             return self._send(403, {"error": "not allowed"})
         try:

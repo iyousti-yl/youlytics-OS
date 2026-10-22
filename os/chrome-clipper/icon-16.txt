@@ -1,0 +1,1 @@
+Toolbar icon for the youlytics clipper, 16x16 px: the youlytics logo mark (white lowercase y on a sapphire #1F3B70 rounded tile, amber #D9962B dot at the top of the rising stroke). Drawn with Pillow from brand/logo-mark.svg, no AI image model.

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+:root{--sapphire:#1F3B70;--ink:#142033;--muted:#4F5B6E;--line:#D3DAE5;--ruby:#9E2B3F;--mist:#F4F6FA}
+body{margin:0;width:300px;padding:14px;font:14px/1.45 "IBM Plex Sans","Segoe UI",system-ui,sans-serif;color:var(--ink);background:#fff;display:grid;gap:10px}
+h1{margin:0;font-size:15px;font-weight:600;display:flex;gap:8px;align-items:center}
+#title{margin:0;color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+textarea{width:100%;box-sizing:border-box;min-height:60px;resize:vertical;font:inherit;border:1px solid var(--line);border-radius:8px;padding:8px}
+button{font:inherit;font-weight:500;padding:8px 12px;border-radius:8px;border:1px solid var(--sapphire);background:var(--sapphire);color:#fff;cursor:pointer}
+button:disabled{opacity:.5}
+#status{margin:0;font-size:13px;color:var(--muted)} #status.bad{color:var(--ruby)}
+</style>
+</head>
+<body>
+  <h1><img src="icon-16.png" alt="" width="16" height="16">Save to youlytics</h1>
+  <p id="title"></p>
+  <textarea id="note" placeholder="Why it's worth keeping (optional)"></textarea>
+  <button id="save" type="button">Save to knowledge/reading</button>
+  <p id="status">Needs the dashboard running: python3 os/server.py</p>
+  <script src="popup.js"></script>
+</body>
+</html>

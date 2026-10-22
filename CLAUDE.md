@@ -17,6 +17,8 @@ The memory catalog: @MEMORY.md
 
 - Apps: `os/apps/apps.json` lists how Claude reaches each app. To add one, use `/connect`: lightest way in first (maker's tools, CLI, API, then MCP), keys only in `.env`, one real read as the test.
 
+- Mods: `.claude/statusline.py` is the status line (model, context, 5h/7d limits, cache warm or cold with the reload cost, branch). `os/chrome-clipper/` is a Chrome extension that saves pages to `knowledge/reading/` through the dashboard server. Clips are raw: summarise one when Issam asks.
+
 ## When a chat compacts, always keep
 - Decisions made and the reason for each
 - Templates and formats agreed with Issam

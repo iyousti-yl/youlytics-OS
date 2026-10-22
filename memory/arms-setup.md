@@ -15,8 +15,9 @@ Source plan: RoboNuggets "ARMS Agentic OS v2" guide. Visual home: https://claude
 | M2 Short-term memory | built | compact rules in `CLAUDE.md`; `os/memory/cache.py` report (prices in `os/memory/prices.json`); `os/memory/keepwarm.py` off until the report says it pays |
 | M3 Self-evolving memory | built | `/note` (haiku) with `NOTES.md` per skill or app, `/note apply`; `/calibrate` (sonnet); rule in `CLAUDE.md`; Recos memory cards |
 | A1 Connect anything | built | `/connect`, `os/apps/apps.json` (GitHub via gh, Gmail via claude.ai connector), `os/apps/check.py` |
+| A2 Mods | built | status line `.claude/statusline.py` via `.claude/settings.json`; Chrome clipper `os/chrome-clipper/` → `/api/clip` → `knowledge/reading/`. The job (saving articles) was Claude's pick; Issam can swap it |
 | All other levels | not started | |
 
 Model pins: /grammar, /wildcard, /clean-up, /business-data → haiku, low effort. /tone, /brand → sonnet. Everything else → the router in `os/router/config.json` picks (provider `claude` default, `jev` or `openai` optional; `use_codex` adds Codex on the ChatGPT plan).
 
-Suggested next: A2 mods.
+Suggested next: A3 micro app.
