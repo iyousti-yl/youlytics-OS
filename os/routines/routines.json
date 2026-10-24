@@ -10,22 +10,7 @@
       "model": "auto",
       "effort": "auto",
       "cap_usd_week": 1.0,
-      "allowed_tools": [
-        "Read",
-        "Glob",
-        "Grep",
-        "Bash(df:*)",
-        "Bash(du:*)",
-        "Bash(ps:*)",
-        "Bash(find:*)",
-        "Bash(ls:*)",
-        "Bash(sort:*)",
-        "Bash(head:*)",
-        "Bash(tail:*)",
-        "Bash(date:*)",
-        "Write(./os/reports/**)",
-        "Edit(./os/reports/**)"
-      ]
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)", "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)", "Bash(tasklist:*)", "Bash(reg query:*)", "Write(./os/reports/**)", "Edit(./os/reports/**)"]
     },
     {
       "id": "brand-watch",
@@ -37,12 +22,7 @@
       "model": "haiku",
       "effort": "low",
       "cap_usd_week": 1.0,
-      "allowed_tools": [
-        "Read",
-        "WebSearch",
-        "WebFetch",
-        "Edit(./business/ops/brand-watch.md)"
-      ]
+      "allowed_tools": ["Read", "WebSearch", "WebFetch", "Edit(./business/ops/brand-watch.md)"]
     },
     {
       "id": "domain-scout",
@@ -54,11 +34,7 @@
       "model": "haiku",
       "effort": "low",
       "cap_usd_week": 0.5,
-      "allowed_tools": [
-        "Read",
-        "Bash(whois:*)",
-        "Edit(./business/ops/domains.md)"
-      ]
+      "allowed_tools": ["Read", "Bash(whois:*)", "Edit(./business/ops/domains.md)"]
     },
     {
       "id": "inbox-digest",
@@ -70,9 +46,7 @@
       "model": "haiku",
       "effort": "low",
       "cap_usd_week": 1.0,
-      "allowed_tools": [
-        "mcp__claude_ai_Gmail"
-      ],
+      "allowed_tools": ["mcp__claude_ai_Gmail"],
       "setup_note": "Needs the Gmail connector in Claude Code. Run /mcp in Claude Code, copy the Gmail server name into allowed_tools as mcp__<name>, then enable."
     },
     {
@@ -85,14 +59,7 @@
       "model": "sonnet",
       "effort": "medium",
       "cap_usd_week": 2.0,
-      "allowed_tools": [
-        "Read",
-        "Glob",
-        "Grep",
-        "Bash(python3 os/recos/collect.py:*)",
-        "Write(./os/recos/recos.json)",
-        "Edit(./os/recos/recos.json)"
-      ]
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(python3 os/recos/collect.py:*)", "Write(./os/recos/recos.json)", "Edit(./os/recos/recos.json)"]
     },
     {
       "id": "morning-plan",
@@ -104,16 +71,7 @@
       "model": "sonnet",
       "effort": "low",
       "cap_usd_week": 1.5,
-      "allowed_tools": [
-        "Read",
-        "Glob",
-        "Grep",
-        "Bash(python3 os/planner/plans.py:*)",
-        "Bash(date:*)",
-        "Write(./planning/**)",
-        "Edit(./planning/**)",
-        "Edit(./projects/**)"
-      ]
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(python3 os/planner/plans.py:*)", "Bash(date:*)", "Write(./planning/**)", "Edit(./planning/**)", "Edit(./projects/**)"]
     },
     {
       "id": "weekly-review",
@@ -125,16 +83,7 @@
       "model": "sonnet",
       "effort": "medium",
       "cap_usd_week": 1.0,
-      "allowed_tools": [
-        "Read",
-        "Glob",
-        "Grep",
-        "Bash(python3 os/planner/plans.py:*)",
-        "Bash(date:*)",
-        "Write(./planning/**)",
-        "Edit(./planning/**)",
-        "Edit(./projects/**)"
-      ]
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(python3 os/planner/plans.py:*)", "Bash(date:*)", "Write(./planning/**)", "Edit(./planning/**)", "Edit(./projects/**)"]
     },
     {
       "id": "monthly-plan",
@@ -146,16 +95,7 @@
       "model": "sonnet",
       "effort": "medium",
       "cap_usd_week": 1.0,
-      "allowed_tools": [
-        "Read",
-        "Glob",
-        "Grep",
-        "Bash(python3 os/planner/plans.py:*)",
-        "Bash(date:*)",
-        "Write(./planning/**)",
-        "Edit(./planning/**)",
-        "Edit(./projects/**)"
-      ]
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(python3 os/planner/plans.py:*)", "Bash(date:*)", "Write(./planning/**)", "Edit(./planning/**)", "Edit(./projects/**)"]
     }
   ]
 }

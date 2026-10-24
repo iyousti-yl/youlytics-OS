@@ -36,7 +36,7 @@ Passes when the run finishes in under a minute and, only if something is worth f
 **R2 Capped routines.** Run `python3 os/routines/run.py costs`, then `/cap-routine`.
 Passes when each routine shows its runs, tokens and cost against its cap, and `/cap-routine` shows a before and after estimate for the most expensive one before changing anything.
 
-Schedule them for real: `python3 os/routines/run.py install --write` on a Mac (on Windows, run the line `install` prints). Passes when the next due routine shows a Last run time on its own.
+Schedule them for real: `python3 os/routines/run.py install --write` (Task Scheduler on Windows, launchd on a Mac). On Windows, `schtasks /Query /TN com.youlytics.routines` shows the task. Passes when the next due routine shows a Last run time on its own, with no window popping up.
 
 **R3 Routines that suggest routines.** Press **Run now** on Routine suggestions, then open **Recos**.
 Passes when the Inbox gets a "N cards this week" line and Recos shows the cards (with little history it may say there are none; `/recos?example` shows example cards). Add two to the cart, press **Copy for Claude**, paste into Claude Code: Claude sets up only those, one at a time.

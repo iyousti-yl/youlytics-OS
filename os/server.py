@@ -8,6 +8,7 @@ Routines come from os/routines/routines.json and run through os/routines/run.py.
 """
 import json
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -63,9 +64,9 @@ def run_skill(skill, cfg, model, effort):
     stamp = datetime.now().strftime("%Y-%m-%d-%H%M")
     log = REPORTS / f"{skill}-{stamp}.log"
     if model == "codex":  # Codex CLI on the ChatGPT plan, allowed to write only inside this workspace
-        cmd = ["codex", "exec", "-c", f"model_reasoning_effort={effort}", "--sandbox", "workspace-write", cfg["prompt"]]
+        cmd = [shutil.which("codex") or "codex", "exec", "-c", f"model_reasoning_effort={effort}", "--sandbox", "workspace-write", cfg["prompt"]]
     else:
-        cmd = ["claude", "-p", cfg["prompt"], "--model", model, "--effort", effort,
+        cmd = [shutil.which("claude") or "claude", "-p", cfg["prompt"], "--model", model, "--effort", effort,
                "--allowedTools", *cfg.get("allowed_tools", [])]
     started = time.time()
     with open(log, "w") as out:

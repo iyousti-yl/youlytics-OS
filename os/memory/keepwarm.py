@@ -14,6 +14,7 @@ fork's transcript is deleted after the ping. A chat is pinged when it has been i
 of reading it, the ping missed, so that chat is not pinged again and the miss is logged.
 """
 import json
+import shutil
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -56,11 +57,11 @@ def due(cfg, now):
 
 
 def ping(chat, cfg):
-    cmd = ["claude", "-p", cfg["ping_prompt"], "--resume", chat["session"], "--fork-session",
+    cmd = [shutil.which("claude") or "claude", "-p", cfg["ping_prompt"], "--resume", chat["session"], "--fork-session",
            "--model", chat["model"], "--output-format", "json", "--max-turns", "1"]
     try:
         out = subprocess.run(cmd, cwd=chat["cwd"], capture_output=True, text=True, timeout=120,
-                             stdin=subprocess.DEVNULL)
+                             stdin=subprocess.DEVNULL, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         data = json.loads(out.stdout)
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
         return {"ok": False, "error": f"{type(e).__name__}: {e}"[:200]}

@@ -33,6 +33,7 @@ INBOX = ROOT / "os" / "inbox.jsonl"
 REPORTS = ROOT / "os" / "reports" / "routines"
 ROUTER = ROOT / "os" / "router" / "route.py"
 NOTHING = "NOTHING_TO_FLAG"
+NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)  # Windows: no console window flashing up on each run
 DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 PASSIVE_RULES = (
@@ -134,7 +135,7 @@ def pick_model(r):
     model, effort = r.get("model", "auto"), r.get("effort", "auto")
     if "auto" in (model, effort):
         out = subprocess.run([sys.executable, str(ROUTER), "--json", r["prompt"]],
-                             cwd=ROOT, capture_output=True, text=True, timeout=60)
+                             cwd=ROOT, capture_output=True, text=True, timeout=60, creationflags=NO_WINDOW)
         pick = json.loads(out.stdout)
         model = pick["model"] if model == "auto" else model
         effort = pick["effort"] if effort == "auto" else effort
@@ -158,14 +159,15 @@ def run(r):
 
     model, effort = pick_model(r)
     rules = PASSIVE_RULES if r["mode"] == "passive" else ACTIVE_RULES
-    cmd = ["claude", "-p", r["prompt"], "--model", model, "--effort", effort,
+    cmd = [shutil.which("claude") or "claude", "-p", r["prompt"], "--model", model, "--effort", effort,
            "--output-format", "json", "--append-system-prompt", rules,
            "--max-budget-usd", f"{max(cap - spent, 0.01):.2f}",
            "--allowedTools", *r.get("allowed_tools", ["Read", "Glob", "Grep"])]
     started = time.monotonic()
     try:
         out = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
-                             timeout=r.get("timeout_minutes", 20) * 60, stdin=subprocess.DEVNULL)
+                             timeout=r.get("timeout_minutes", 20) * 60, stdin=subprocess.DEVNULL,
+                             creationflags=NO_WINDOW)
         data = json.loads(out.stdout)
         result, cost = (data.get("result") or "").strip(), data.get("total_cost_usd", 0) or 0
         usage = data.get("usage") or {}
