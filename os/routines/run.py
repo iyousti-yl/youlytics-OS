@@ -90,6 +90,13 @@ def last_slot(schedule, now):
         allowed = set(range(5))
     elif parts[0] == "weekly":
         allowed = {DAYS.index(parts[1][:3])}
+    elif parts[0] == "monthly":  # e.g. "monthly 1 08:00": that day of every month
+        day = int(parts[1])
+        cand = slot.replace(day=day) if day <= 28 else None
+        if cand and cand > now:
+            prev = (slot.replace(day=1) - timedelta(days=1)).replace(day=day)
+            cand = prev
+        return cand
     else:
         raise ValueError(f"unknown schedule: {schedule}")
     for back in range(8):

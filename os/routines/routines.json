@@ -10,7 +10,22 @@
       "model": "auto",
       "effort": "auto",
       "cap_usd_week": 1.0,
-      "allowed_tools": ["Read", "Glob", "Grep", "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)", "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)", "Write(./os/reports/**)", "Edit(./os/reports/**)"]
+      "allowed_tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash(df:*)",
+        "Bash(du:*)",
+        "Bash(ps:*)",
+        "Bash(find:*)",
+        "Bash(ls:*)",
+        "Bash(sort:*)",
+        "Bash(head:*)",
+        "Bash(tail:*)",
+        "Bash(date:*)",
+        "Write(./os/reports/**)",
+        "Edit(./os/reports/**)"
+      ]
     },
     {
       "id": "brand-watch",
@@ -22,7 +37,12 @@
       "model": "haiku",
       "effort": "low",
       "cap_usd_week": 1.0,
-      "allowed_tools": ["Read", "WebSearch", "WebFetch", "Edit(./business/ops/brand-watch.md)"]
+      "allowed_tools": [
+        "Read",
+        "WebSearch",
+        "WebFetch",
+        "Edit(./business/ops/brand-watch.md)"
+      ]
     },
     {
       "id": "domain-scout",
@@ -34,7 +54,11 @@
       "model": "haiku",
       "effort": "low",
       "cap_usd_week": 0.5,
-      "allowed_tools": ["Read", "Bash(whois:*)", "Edit(./business/ops/domains.md)"]
+      "allowed_tools": [
+        "Read",
+        "Bash(whois:*)",
+        "Edit(./business/ops/domains.md)"
+      ]
     },
     {
       "id": "inbox-digest",
@@ -46,7 +70,9 @@
       "model": "haiku",
       "effort": "low",
       "cap_usd_week": 1.0,
-      "allowed_tools": ["mcp__claude_ai_Gmail"],
+      "allowed_tools": [
+        "mcp__claude_ai_Gmail"
+      ],
       "setup_note": "Needs the Gmail connector in Claude Code. Run /mcp in Claude Code, copy the Gmail server name into allowed_tools as mcp__<name>, then enable."
     },
     {
@@ -59,7 +85,77 @@
       "model": "sonnet",
       "effort": "medium",
       "cap_usd_week": 2.0,
-      "allowed_tools": ["Read", "Glob", "Grep", "Bash(python3 os/recos/collect.py:*)", "Write(./os/recos/recos.json)", "Edit(./os/recos/recos.json)"]
+      "allowed_tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash(python3 os/recos/collect.py:*)",
+        "Write(./os/recos/recos.json)",
+        "Edit(./os/recos/recos.json)"
+      ]
+    },
+    {
+      "id": "morning-plan",
+      "name": "Morning plan",
+      "mode": "active",
+      "schedule": "weekdays 07:30",
+      "enabled": true,
+      "prompt": "/plan day",
+      "model": "sonnet",
+      "effort": "low",
+      "cap_usd_week": 1.5,
+      "allowed_tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash(python3 os/planner/plans.py:*)",
+        "Bash(date:*)",
+        "Write(./planning/**)",
+        "Edit(./planning/**)",
+        "Edit(./projects/**)"
+      ]
+    },
+    {
+      "id": "weekly-review",
+      "name": "Weekly review and plan",
+      "mode": "active",
+      "schedule": "weekly fri 16:00",
+      "enabled": true,
+      "prompt": "/plan week",
+      "model": "sonnet",
+      "effort": "medium",
+      "cap_usd_week": 1.0,
+      "allowed_tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash(python3 os/planner/plans.py:*)",
+        "Bash(date:*)",
+        "Write(./planning/**)",
+        "Edit(./planning/**)",
+        "Edit(./projects/**)"
+      ]
+    },
+    {
+      "id": "monthly-plan",
+      "name": "Month plan",
+      "mode": "active",
+      "schedule": "monthly 1 08:00",
+      "enabled": true,
+      "prompt": "/plan month",
+      "model": "sonnet",
+      "effort": "medium",
+      "cap_usd_week": 1.0,
+      "allowed_tools": [
+        "Read",
+        "Glob",
+        "Grep",
+        "Bash(python3 os/planner/plans.py:*)",
+        "Bash(date:*)",
+        "Write(./planning/**)",
+        "Edit(./planning/**)",
+        "Edit(./projects/**)"
+      ]
     }
   ]
 }

@@ -15,6 +15,8 @@ ARMS A3. Every local micro app links `/ui/parts.css` and `/ui/parts.js` (served 
 | `UI.cart({...})` + `UI.copyBack(...)` + `UI.copy(text)` | Bottom bar that copies picks or comments back to Claude |
 | `UI.save(url, data)`, `UI.store(key, fallback)` | Save to a file through the server; small per-browser settings |
 | `UI.toast(msg)`, `UI.say(msg)`, `UI.esc(text)` | Feedback; tell screen-reader users what changed; safe HTML |
+| `.ui-toggle` | A few views of one thing, one pressed at a time (buttons with `aria-pressed`) |
+| `UI.markdown(text, {onTask, skipTitle})` | Plain Markdown to HTML; with `onTask` the `- [ ]` lines become checkboxes that tick the file |
 | `.sr-only` | Text only screen readers hear, e.g. which item a repeated button acts on |
 
 ## A new micro app

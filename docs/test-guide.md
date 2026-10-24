@@ -64,5 +64,15 @@ Passes when Claude makes the change and shows the diff, your verdicts survive a 
 **Brain.** Open **Brain** in the top bar. Click `CLAUDE.md`, then follow a link in the side panel; search for `tone`; switch to **List** and move through it with Tab only.
 Passes when the side panel shows what the file points to and what points to it, the search fades everything else, and the List view reaches every file without a mouse. `python3 os/brain/graph.py` prints the same numbers as the header.
 
+## Planning
+**Projects.** In Claude Code, run `/project new <a real project>` and answer its questions.
+Passes when `projects/<name>/project.md` has your goal, milestones and next action, and the project shows under **Projects** in the Planner.
+
+**Plans.** Run `/plan week`, approve the draft, then `/plan day`. Open **Planner** in the top bar and tick off one of today's top 3 with the keyboard (Tab, then Space).
+Passes when each priority names its project, nothing is invented (no meetings without a calendar), the tick shows as `- [x]` in `planning/day/<today>.md`, and the dashboard's first tile counts it.
+
+**Routines.** On the dashboard, run **Morning plan** once.
+Passes when today's plan appears (or is updated) and the inbox shows a one-line summary with its cost.
+
 ## When something fails
 Tell Claude Code what you saw, or park it with `/note <skill or app> <what went wrong>`. Small fixes go straight in; anything bigger comes back to you as a decision.
