@@ -56,7 +56,7 @@ def new_plan(kind, d):
     f = ROOT / rel
     if not f.exists():
         f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(fill((TEMPLATES / f"{kind}.md").read_text(), values_for(d)))
+        f.write_text(fill((TEMPLATES / f"{kind}.md").read_text(encoding="utf-8"), values_for(d)))
     return rel
 
 
@@ -70,9 +70,9 @@ def new_project(name, goal="", today=None):
     f = folder / "project.md"
     if not f.exists():
         folder.mkdir(parents=True, exist_ok=True)
-        f.write_text(fill((TEMPLATES / "project.md").read_text(), {"date": d.isoformat(), "name": name, "goal": goal}))
+        f.write_text(fill((TEMPLATES / "project.md").read_text(encoding="utf-8"), {"date": d.isoformat(), "name": name, "goal": goal}))
         router = PROJECTS / "projects.md"
-        router.write_text(router.read_text().rstrip("\n") + f"\n| [{name}]({slug(name)}/project.md) | active | business | {goal} |\n")
+        router.write_text(router.read_text(encoding="utf-8").rstrip("\n") + f"\n| [{name}]({slug(name)}/project.md) | active | business | {goal} |\n")
     return str(f.relative_to(ROOT))
 
 
@@ -93,7 +93,7 @@ def plan(kind, d):
     f = ROOT / rel
     if not f.is_file():
         return {"kind": kind, "path": rel, "exists": False}
-    text = f.read_text()
+    text = f.read_text(encoding="utf-8")
     ts = tasks(text)
     top = [t for t in ts if t["section"] == TOP[kind]]
     return {"kind": kind, "path": rel, "exists": True, "text": text,
@@ -109,7 +109,7 @@ def front_matter(text):
 def projects():
     out = []
     for f in sorted(PROJECTS.glob("*/project.md")):
-        meta, body = front_matter(f.read_text())
+        meta, body = front_matter(f.read_text(encoding="utf-8"))
         title = re.search(r"^# (.+)$", body, re.M)
         goal = re.search(r"^## Goal\n+(.+)$", body, re.M)
         ts = tasks(body)
@@ -134,14 +134,14 @@ def toggle(rel, line, text, done):
     if f.suffix != ".md" or not (f.is_relative_to(PLANNING) or f.is_relative_to(PROJECTS)) \
             or f.is_relative_to(TEMPLATES) or not f.is_file():
         return False
-    lines = f.read_text().split("\n")
+    lines = f.read_text(encoding="utf-8").split("\n")
     if not (0 <= line < len(lines)):
         return False
     m = TASK.match(lines[line])
     if not m or m.group(3).strip() != text:
         return False
     lines[line] = f"{m.group(1)}- [{'x' if done else ' '}] {m.group(3)}"
-    f.write_text("\n".join(lines))
+    f.write_text("\n".join(lines), encoding="utf-8")
     return True
 
 
