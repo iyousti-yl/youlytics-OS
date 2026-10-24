@@ -52,7 +52,7 @@ def prompt_text(entry):
 
 
 def existing():
-    routines = json.loads((ROOT / "os" / "routines" / "routines.json").read_text())["routines"]
+    routines = json.loads((ROOT / "os" / "routines" / "routines.json").read_text(encoding="utf-8"))["routines"]
     skills = sorted(p.parent.name for p in (ROOT / ".claude" / "skills").glob("*/SKILL.md"))
     return {"routines": [{"id": r["id"], "name": r["name"], "schedule": r["schedule"], "prompt": r["prompt"]}
                          for r in routines],
@@ -65,7 +65,7 @@ def collect(days):
     prompts, sessions, commands, seen = [], set(), Counter(), set()
     for path in TRANSCRIPTS.glob("*/*.jsonl"):
         try:
-            lines = path.read_text(errors="replace").splitlines()
+            lines = path.read_text(errors="replace", encoding="utf-8").splitlines()
         except OSError:
             continue
         for line in lines:
@@ -96,7 +96,7 @@ def collect(days):
 def main(argv):
     days = int(argv[argv.index("--days") + 1]) if "--days" in argv else 7
     data = collect(days)
-    OUT.write_text(json.dumps(data, indent=1))
+    OUT.write_text(json.dumps(data, indent=1), encoding="utf-8")
     print(f"{data['prompt_count']} prompts from {data['sessions']} sessions in the last {days} days "
           f"-> {OUT.relative_to(ROOT)}")
     return 0

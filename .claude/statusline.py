@@ -34,7 +34,7 @@ def last_reply_age(transcript):
 
 def reload_cost(root, model, tokens):
     try:
-        prices = json.loads((Path(root) / "os" / "memory" / "prices.json").read_text())
+        prices = json.loads((Path(root) / "os" / "memory" / "prices.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
     models = prices["models"]
@@ -65,8 +65,9 @@ def cache_part(d, root):
 
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")  # Windows pipes default to cp1252; Claude Code reads UTF-8
     try:
-        d = json.load(sys.stdin)
+        d = json.loads(sys.stdin.buffer.read().decode("utf-8", "replace"))
     except json.JSONDecodeError:
         print("youlytics")
         return
@@ -91,7 +92,7 @@ def main():
         parts.append(f"${cost:.2f}")
     try:
         branch = subprocess.run(["git", "branch", "--show-current"], cwd=d.get("cwd") or root,
-                                capture_output=True, text=True, timeout=2).stdout.strip()
+                                capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=2).stdout.strip()
         if branch:
             parts.append(f"{DIM}{branch}{RESET}")
     except (OSError, subprocess.SubprocessError):

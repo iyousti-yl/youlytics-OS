@@ -27,7 +27,7 @@ PING_TOKENS = {"write": 60, "output": 10}  # the ping's own prompt and its one-w
 
 
 def load(name):
-    return json.loads((HERE / name).read_text())
+    return json.loads((HERE / name).read_text(encoding="utf-8"))
 
 
 def price(prices, model):
@@ -46,7 +46,7 @@ def sessions(since):
         try:
             if datetime.fromtimestamp(path.stat().st_mtime, timezone.utc) < since:
                 continue
-            lines = path.read_text(errors="replace").splitlines()
+            lines = path.read_text(errors="replace", encoding="utf-8").splitlines()
         except OSError:
             continue
         msgs, seen, headless, cwd = [], set(), False, None
@@ -163,7 +163,7 @@ def main(argv):
     if "--save" in argv:
         out = ROOT / "os" / "reports" / f"cache-{datetime.now():%Y-%m-%d}.md"
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(text)
+        out.write_text(text, encoding="utf-8")
         print(f"Saved to {out.relative_to(ROOT)}")
     return 0
 

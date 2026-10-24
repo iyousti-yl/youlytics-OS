@@ -31,7 +31,7 @@ PINGS = HERE / "pings.jsonl"
 
 def read_state():
     try:
-        return json.loads(STATE.read_text())
+        return json.loads(STATE.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return {}
 
@@ -60,7 +60,7 @@ def ping(chat, cfg):
     cmd = [shutil.which("claude") or "claude", "-p", cfg["ping_prompt"], "--resume", chat["session"], "--fork-session",
            "--model", chat["model"], "--output-format", "json", "--max-turns", "1"]
     try:
-        out = subprocess.run(cmd, cwd=chat["cwd"], capture_output=True, text=True, timeout=120,
+        out = subprocess.run(cmd, cwd=chat["cwd"], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120,
                              stdin=subprocess.DEVNULL, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         data = json.loads(out.stdout)
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
@@ -78,7 +78,7 @@ def ping(chat, cfg):
 
 
 def tick():
-    cfg = json.loads(CONFIG.read_text())
+    cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
     if not cfg.get("keep_warm"):
         return []
     now = datetime.now(timezone.utc)
@@ -91,19 +91,19 @@ def tick():
             s["missed"] = True  # the ping wrote instead of read: pinging this chat only costs
         row = {"ts": now.astimezone().isoformat(timespec="seconds"), "session": chat["session"][:8],
                "model": chat["model"], "idle_minutes": chat["idle_minutes"], **r}
-        with open(PINGS, "a") as f:
+        with open(PINGS, "a", encoding="utf-8") as f:
             f.write(json.dumps(row) + "\n")
         results.append(row)
-    STATE.write_text(json.dumps(state, indent=2))
+    STATE.write_text(json.dumps(state, indent=2), encoding="utf-8")
     return results
 
 
 def main(argv):
     cmd = argv[0] if argv else "status"
-    cfg = json.loads(CONFIG.read_text())
+    cfg = json.loads(CONFIG.read_text(encoding="utf-8"))
     if cmd in ("on", "off"):
         cfg["keep_warm"] = cmd == "on"
-        CONFIG.write_text(json.dumps(cfg, indent=2) + "\n")
+        CONFIG.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
         print(f"Keep-warm is {cmd}." + (" Schedule `tick` with: python3 os/memory/keepwarm.py install" if cmd == "on" else ""))
         return 0
     if cmd == "tick":
@@ -115,7 +115,7 @@ def main(argv):
               f"for up to {cfg['warm_for_hours']} h, chats of {cfg['min_context_tokens']:,}+ tokens.")
         for c in due(cfg, datetime.now(timezone.utc)):
             print(f"  due: {c['session'][:8]} {c['model']} idle {c['idle_minutes']} min, {c['context']:,} tokens")
-        rows = PINGS.read_text().splitlines()[-5:] if PINGS.is_file() else []
+        rows = PINGS.read_text(encoding="utf-8").splitlines()[-5:] if PINGS.is_file() else []
         for line in rows:
             r = json.loads(line)
             print(f"  pinged {r['ts']} {r['session']} " + ("missed the cache" if r.get("missed") else

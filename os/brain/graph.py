@@ -38,7 +38,7 @@ PY_IMPORT = re.compile(r"^\s*import (\w+)", re.M)
 def files():
     try:
         out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard"],
-                             cwd=ROOT, capture_output=True, text=True, check=True).stdout.splitlines()
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True).stdout.splitlines()
     except (OSError, subprocess.CalledProcessError):
         out = [str(p.relative_to(ROOT)) for p in ROOT.rglob("*") if p.is_file() and ".git" not in p.parts]
     return sorted(f for f in out if Path(f).name not in SKIP and (ROOT / f).is_file()
@@ -105,7 +105,7 @@ def build():
         if Path(p).suffix not in TEXT:
             continue
         try:
-            text = (ROOT / p).read_text(errors="replace")[:200_000]
+            text = (ROOT / p).read_text(errors="replace", encoding="utf-8")[:200_000]
         except OSError:
             continue
         targets = set()
@@ -162,7 +162,7 @@ def preview(path, limit=4000):
     """The start of one file in the graph, for the side panel. None if it isn't a text file in the graph."""
     if path not in set(files()) or Path(path).suffix not in TEXT or path.endswith(".env"):
         return None
-    return (ROOT / path).read_text(errors="replace")[:limit]
+    return (ROOT / path).read_text(errors="replace", encoding="utf-8")[:limit]
 
 
 def main(argv):

@@ -42,13 +42,13 @@ lock = threading.Lock()
 
 
 def load_buttons():
-    return json.loads((OS_DIR / "buttons.json").read_text())
+    return json.loads((OS_DIR / "buttons.json").read_text(encoding="utf-8"))
 
 
 def routed(prompt):
     """Ask the router (os/router/route.py) for a model and effort."""
     out = subprocess.run([sys.executable, str(ROUTER / "route.py"), "--json", prompt],
-                         cwd=ROOT, capture_output=True, text=True, timeout=30)
+                         cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
     pick = json.loads(out.stdout)
     return pick["model"], pick["effort"], pick["source"]
 
@@ -69,7 +69,7 @@ def run_skill(skill, cfg, model, effort):
         cmd = [shutil.which("claude") or "claude", "-p", cfg["prompt"], "--model", model, "--effort", effort,
                "--allowedTools", *cfg.get("allowed_tools", [])]
     started = time.time()
-    with open(log, "w") as out:
+    with open(log, "w", encoding="utf-8") as out:
         try:
             code = subprocess.run(cmd, cwd=ROOT, stdout=out, stderr=subprocess.STDOUT, timeout=1800).returncode
         except FileNotFoundError:
@@ -90,7 +90,7 @@ def skill_usage():
     """Skill runs and tokens from os/skills/usage.py, refreshed at most once a minute."""
     if time.time() - _skills_cache["at"] > 60:
         out = subprocess.run([sys.executable, str(OS_DIR / "skills" / "usage.py"), "--json"],
-                             cwd=ROOT, capture_output=True, text=True)
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         try:
             _skills_cache.update(at=time.time(), data=json.loads(out.stdout))
         except json.JSONDecodeError:
@@ -102,7 +102,7 @@ def read_jsonl(path):
     if not path.is_file():
         return []
     rows = []
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -116,12 +116,12 @@ routine_runs = {}  # routine id -> "running" while the dashboard runs it
 def routines_state():
     """Each routine with its week cost against its cap and its last run."""
     out = subprocess.run([sys.executable, str(ROUTINES / "run.py"), "costs", "--json"],
-                         cwd=ROOT, capture_output=True, text=True)
+                         cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
     try:
         rows = json.loads(out.stdout)
     except json.JSONDecodeError:
         return []
-    config = {r["id"]: r for r in json.loads((ROUTINES / "routines.json").read_text())["routines"]}
+    config = {r["id"]: r for r in json.loads((ROUTINES / "routines.json").read_text(encoding="utf-8"))["routines"]}
     last = {}
     for run in read_jsonl(ROUTINES / "runs.jsonl"):
         last[run["id"]] = run
@@ -150,7 +150,7 @@ def mark_read(key):
     for r in rows:
         if key is None or (r.get("ts"), r.get("id")) == key:
             r["read"] = True
-    INBOX.write_text("".join(json.dumps(r) + "\n" for r in rows))
+    INBOX.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
 
 
 _cache_cache = {"at": 0, "data": {}}
@@ -160,7 +160,7 @@ def cache_report():
     """Cold-cache numbers from os/memory/cache.py, refreshed at most every 10 minutes."""
     if time.time() - _cache_cache["at"] > 600:
         out = subprocess.run([sys.executable, str(OS_DIR / "memory" / "cache.py"), "--json"],
-                             cwd=ROOT, capture_output=True, text=True)
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         try:
             _cache_cache.update(at=time.time(), data=json.loads(out.stdout))
         except json.JSONDecodeError:
@@ -175,7 +175,7 @@ def apps_state():
     """Each app from os/apps/apps.json with its last check, refreshed at most every 10 minutes."""
     if time.time() - _apps_cache["at"] > 600:
         out = subprocess.run([sys.executable, str(OS_DIR / "apps" / "check.py"), "--json"],
-                             cwd=ROOT, capture_output=True, text=True)
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
         try:
             _apps_cache.update(at=time.time(), data=json.loads(out.stdout))
         except json.JSONDecodeError:
@@ -207,11 +207,11 @@ def save_clip(c):
     if c.get("text"):
         parts += ["## Page text", "", str(c["text"]).strip(), ""]
     READING.mkdir(parents=True, exist_ok=True)
-    path.write_text("\n".join(parts))
+    path.write_text("\n".join(parts), encoding="utf-8")
     index = READING / "index.md"
     if not index.is_file():
-        index.write_text("# Reading index\n\nOne line per saved item, newest last.\n\n")
-    with open(index, "a") as f:
+        index.write_text("# Reading index\n\nOne line per saved item, newest last.\n\n", encoding="utf-8")
+    with open(index, "a", encoding="utf-8") as f:
         f.write(f"- {day} [{title}]({path.name}): {(c.get('note') or c.get('description') or url)[:140]}\n")
     return str(path.relative_to(ROOT))
 
@@ -221,7 +221,7 @@ def micro_apps():
     apps = []
     for f in sorted(OS_DIR.glob("*/app.json")):
         try:
-            meta = json.loads(f.read_text())
+            meta = json.loads(f.read_text(encoding="utf-8"))
         except json.JSONDecodeError:
             continue
         if (f.parent / "index.html").is_file():
@@ -235,7 +235,7 @@ def review_items(days=14):
     items = []
     index = ARTIFACTS / "index.html"
     if index.is_file():
-        for m in re.finditer(r"\{([^{}]*path:\s*\"[^\"]+\"[^{}]*)\}", index.read_text()):
+        for m in re.finditer(r"\{([^{}]*path:\s*\"[^\"]+\"[^{}]*)\}", index.read_text(encoding="utf-8")):
             e = dict(re.findall(r'(\w+):\s*"((?:[^"\\]|\\.)*)"', m.group(1)))
             f = ARTIFACTS / e.get("path", "")
             if f.is_file() and f.stat().st_mtime >= since:
@@ -249,7 +249,7 @@ def review_items(days=14):
             rel = f.relative_to(REPORTS).as_posix()
             items.append({"key": f"os/reports/{rel}", "kind": kind, "title": f.stem,
                           "meta": datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M"),
-                          "text": f.read_text(errors="replace")[:4000], "open": f"/reports/{rel}",
+                          "text": f.read_text(errors="replace", encoding="utf-8")[:4000], "open": f"/reports/{rel}",
                           "mtime": f.stat().st_mtime})
     items.sort(key=lambda i: -i["mtime"])
     return items
@@ -295,9 +295,9 @@ class Handler(BaseHTTPRequestHandler):
             with lock:
                 state = {k: dict(v) for k, v in runs.items()}
             buttons = {k: {kk: v[kk] for kk in ("label", "default_model", "default_effort")} for k, v in load_buttons().items()}
-            router = json.loads((ROUTER / "config.json").read_text())
+            router = json.loads((ROUTER / "config.json").read_text(encoding="utf-8"))
             stats = json.loads(subprocess.run([sys.executable, str(ROUTER / "route.py"), "stats"],
-                                              cwd=ROOT, capture_output=True, text=True).stdout or "{}")
+                                              cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace").stdout or "{}")
             return self._send(200, {"buttons": buttons, "runs": state, "reports": latest_reports(),
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
                                     "skills": skill_usage(), "routines": routines_state(),
@@ -368,7 +368,7 @@ class Handler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 return self._send(400, {"error": "bad request"})
             with lock:
-                f.write_text(json.dumps(data, indent=1))
+                f.write_text(json.dumps(data, indent=1), encoding="utf-8")
             return self._send(200, {"ok": True})
         if self.path not in POSTS or not self._same_origin():
             return self._send(403, {"error": "not allowed"})
@@ -381,7 +381,7 @@ class Handler(BaseHTTPRequestHandler):
                            cwd=ROOT, capture_output=True)
             return self._send(200, {"ok": True})
         if self.path == "/api/routines/run":
-            ids = {r["id"] for r in json.loads((ROUTINES / "routines.json").read_text())["routines"]}
+            ids = {r["id"] for r in json.loads((ROUTINES / "routines.json").read_text(encoding="utf-8"))["routines"]}
             rid = req.get("id")
             if rid not in ids:
                 return self._send(400, {"error": "unknown routine"})
