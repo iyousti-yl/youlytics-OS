@@ -48,16 +48,16 @@ ACTIVE_RULES = (
 
 
 def load():
-    return json.loads(CONFIG.read_text())["routines"]
+    return json.loads(CONFIG.read_text(encoding="utf-8"))["routines"]
 
 
 def save(routines):
-    CONFIG.write_text(json.dumps({"routines": routines}, indent=2) + "\n")
+    CONFIG.write_text(json.dumps({"routines": routines}, indent=2) + "\n", encoding="utf-8")
 
 
 def read_json(path, default):
     try:
-        return json.loads(path.read_text())
+        return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return default
 
@@ -66,7 +66,7 @@ def read_jsonl(path):
     if not path.is_file():
         return []
     rows = []
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         try:
             rows.append(json.loads(line))
         except json.JSONDecodeError:
@@ -76,7 +76,7 @@ def read_jsonl(path):
 
 def append_jsonl(path, row):
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a") as f:
+    with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(row) + "\n")
 
 
@@ -128,7 +128,7 @@ def pick_model(r):
     model, effort = r.get("model", "auto"), r.get("effort", "auto")
     if "auto" in (model, effort):
         out = subprocess.run([sys.executable, str(ROUTER), "--json", r["prompt"]],
-                             cwd=ROOT, capture_output=True, text=True, timeout=60, creationflags=NO_WINDOW)
+                             cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60, creationflags=NO_WINDOW)
         pick = json.loads(out.stdout)
         model = pick["model"] if model == "auto" else model
         effort = pick["effort"] if effort == "auto" else effort
@@ -147,7 +147,7 @@ def run(r):
             to_inbox(r, f"Skipped: weekly cap of ${cap:.2f} reached (${spent:.2f} spent). Run /cap-routine to trim it.",
                      kind="cap")
             state.setdefault(r["id"], {})["capped_week"] = now.strftime("%G-%V")
-            STATE.write_text(json.dumps(state, indent=2))
+            STATE.write_text(json.dumps(state, indent=2), encoding="utf-8")
         return {"id": r["id"], "skipped": "cap"}
 
     model, effort = pick_model(r)
@@ -158,7 +158,7 @@ def run(r):
            "--allowedTools", *r.get("allowed_tools", ["Read", "Glob", "Grep"])]
     started = time.monotonic()
     try:
-        out = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True,
+        out = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
                              timeout=r.get("timeout_minutes", 20) * 60, stdin=subprocess.DEVNULL,
                              creationflags=NO_WINDOW)
         data = json.loads(out.stdout)
@@ -176,7 +176,7 @@ def run(r):
         REPORTS.mkdir(parents=True, exist_ok=True)
         path = REPORTS / f"{r['id']}-{now.strftime('%Y-%m-%d-%H%M')}.md"
         path.write_text(f"# {r['name']}\n\n{now:%Y-%m-%d %H:%M} · {model}, {effort} effort · "
-                        f"${cost:.4f}\n\n{result}\n")
+                        f"${cost:.4f}\n\n{result}\n", encoding="utf-8")
         file = str(path.relative_to(ROOT))
         to_inbox(r, (result.splitlines() or ["(no output)"])[0][:160], file, "error" if not ok else "output")
     row = {"ts": now.isoformat(timespec="seconds"), "id": r["id"], "mode": r["mode"], "model": model,
@@ -185,7 +185,7 @@ def run(r):
     append_jsonl(RUNS, row)
     state = read_json(STATE, {})
     state.setdefault(r["id"], {})["last_run"] = row["ts"]
-    STATE.write_text(json.dumps(state, indent=2))
+    STATE.write_text(json.dumps(state, indent=2), encoding="utf-8")
     return row
 
 

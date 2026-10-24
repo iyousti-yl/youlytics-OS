@@ -32,7 +32,7 @@ def own_skills():
 def open_notes(name):
     """Parked /note feedback still waiting in the skill's NOTES.md."""
     f = SKILLS / name / "NOTES.md"
-    return f.read_text().count("- [ ]") if f.is_file() else 0
+    return f.read_text(encoding="utf-8").count("- [ ]") if f.is_file() else 0
 
 
 def turn_tokens(usage):
@@ -73,7 +73,7 @@ def collect(days):
     for path in TRANSCRIPTS.glob("*/*.jsonl"):
         active = set()
         try:
-            lines = path.read_text(errors="replace").splitlines()
+            lines = path.read_text(errors="replace", encoding="utf-8").splitlines()
         except OSError:
             continue
         for line in lines:

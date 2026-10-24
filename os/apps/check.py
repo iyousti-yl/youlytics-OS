@@ -25,7 +25,7 @@ def env_with_keys():
     env = dict(os.environ)
     f = ROOT / ".env"
     if f.is_file():
-        for line in f.read_text().splitlines():
+        for line in f.read_text(encoding="utf-8").splitlines():
             if "=" in line and not line.lstrip().startswith("#"):
                 k, v = line.split("=", 1)
                 env.setdefault(k.strip(), v.strip().strip('"').strip("'"))
@@ -38,7 +38,7 @@ def check(app, env):
     if not app.get("test"):
         return {"id": app["id"], "ok": None, "detail": "check inside Claude Code: " + (app.get("test_in_claude") or "-")}
     try:
-        out = subprocess.run(shlex.split(app["test"]), cwd=ROOT, env=env, capture_output=True, text=True, timeout=60)
+        out = subprocess.run(shlex.split(app["test"]), cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=60)
         ok = out.returncode == 0
         detail = (out.stdout if ok else out.stderr or out.stdout).strip().splitlines()
         return {"id": app["id"], "ok": ok, "detail": (detail[0] if detail else "")[:160]}
@@ -49,7 +49,7 @@ def check(app, env):
 
 
 def main(argv):
-    apps = json.loads((HERE / "apps.json").read_text())["apps"]
+    apps = json.loads((HERE / "apps.json").read_text(encoding="utf-8"))["apps"]
     only = [a for a in argv if not a.startswith("--")]
     env = env_with_keys()
     rows = [{**check(a, env), "name": a["name"], "way_in": a["way_in"]} for a in apps if not only or a["id"] in only]

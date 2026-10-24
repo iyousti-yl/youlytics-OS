@@ -45,7 +45,7 @@ def install(label, script, arg, minutes, log, write):
             print(f"It writes {path} and loads it. Undo with: launchctl unload {path} && rm {path}")
             return 0
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(plist(label, args, minutes, log))
+        path.write_text(plist(label, args, minutes, log), encoding="utf-8")
         subprocess.run(["launchctl", "unload", str(path)], capture_output=True)
         subprocess.run(["launchctl", "load", str(path)], check=False)
         print(f"Scheduled: {path} (every {minutes} minutes). Log: {log}")
@@ -59,7 +59,7 @@ def install(label, script, arg, minutes, log, write):
             print(f"Runs `{arg}` every {minutes} minutes with Task Scheduler. To set it up, run this again with --write.")
             print(f"Check it with: schtasks /Query /TN {label}    Undo with: schtasks /Delete /TN {label} /F")
             return 0
-        done = subprocess.run(cmd, capture_output=True, text=True)
+        done = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
         if done.returncode:
             print(f"Task Scheduler refused it: {(done.stderr or done.stdout).strip()}")
             return 1
