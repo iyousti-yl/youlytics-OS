@@ -1,5 +1,5 @@
-"""Run a command every N minutes on Issam's computer: launchd on macOS, cron on Linux,
-Task Scheduler on Windows. Used by `run.py install` and `keepwarm.py install`.
+"""Run a command every N minutes on Issam's computer: Task Scheduler on Windows, launchd on macOS,
+cron on Linux. Used by `run.py install` and `keepwarm.py install`.
 
 On macOS a LaunchAgent runs inside the logged-in session, so `claude` can reach its
 sign-in in the Keychain (cron often can't).
@@ -51,7 +51,19 @@ def install(label, script, arg, minutes, log, write):
         print(f"Scheduled: {path} (every {minutes} minutes). Log: {log}")
         return 0
     if system == "Windows":
-        print(f'schtasks /Create /SC MINUTE /MO {minutes} /TN {label} /TR "\\"{args[0]}\\" \\"{args[1]}\\" {arg}"')
+        # pythonw.exe runs without a console window, so nothing flashes up every few minutes.
+        pyw = Path(sys.executable).with_name("pythonw.exe")
+        task = f'"{pyw if pyw.exists() else sys.executable}" "{script}" {arg}'
+        cmd = ["schtasks", "/Create", "/F", "/SC", "MINUTE", "/MO", str(minutes), "/TN", label, "/TR", task]
+        if not write:
+            print(f"Runs `{arg}` every {minutes} minutes with Task Scheduler. To set it up, run this again with --write.")
+            print(f"Check it with: schtasks /Query /TN {label}    Undo with: schtasks /Delete /TN {label} /F")
+            return 0
+        done = subprocess.run(cmd, capture_output=True, text=True)
+        if done.returncode:
+            print(f"Task Scheduler refused it: {(done.stderr or done.stdout).strip()}")
+            return 1
+        print(f"Scheduled: task {label} (every {minutes} minutes, no window). Undo with: schtasks /Delete /TN {label} /F")
         return 0
     print("Add this line with `crontab -e`:")
     print(f"*/{minutes} * * * * cd {ROOT} && PATH={os.environ.get('PATH', '/usr/bin:/bin')} "

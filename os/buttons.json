@@ -7,7 +7,7 @@
     "allowed_tools": [
       "Read", "Glob", "Grep",
       "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)",
-      "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)",
+      "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)", "Bash(tasklist:*)", "Bash(reg query:*)",
       "Write(./os/reports/**)", "Edit(./os/reports/**)"
     ]
   }

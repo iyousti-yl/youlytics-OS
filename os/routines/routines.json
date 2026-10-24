@@ -10,7 +10,7 @@
       "model": "auto",
       "effort": "auto",
       "cap_usd_week": 1.0,
-      "allowed_tools": ["Read", "Glob", "Grep", "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)", "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)", "Write(./os/reports/**)", "Edit(./os/reports/**)"]
+      "allowed_tools": ["Read", "Glob", "Grep", "Bash(df:*)", "Bash(du:*)", "Bash(ps:*)", "Bash(find:*)", "Bash(ls:*)", "Bash(sort:*)", "Bash(head:*)", "Bash(tail:*)", "Bash(date:*)", "Bash(tasklist:*)", "Bash(reg query:*)", "Write(./os/reports/**)", "Edit(./os/reports/**)"]
     },
     {
       "id": "brand-watch",
