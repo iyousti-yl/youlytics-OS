@@ -76,6 +76,9 @@ code{font-family:var(--f-mono);font-size:.92em}
 .ui-review pre:focus-visible{outline:2px solid var(--accent)}
 .ui-review pre{margin:0;white-space:pre-wrap;font:13px/1.5 var(--f-mono);background:var(--mist);border-radius:8px;padding:10px;max-height:320px;overflow:auto}
 
+/* Text input: one line, e.g. a quick-capture box */
+.ui-input{flex:1;min-width:200px;font:14px var(--f-sans);min-height:36px;padding:6px 10px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px}
+
 /* Comment box */
 .ui-comment{width:100%;min-height:64px;resize:vertical;font:14px/1.5 var(--f-sans);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .ui-comment:focus{outline:2px solid var(--accent);outline-offset:1px}

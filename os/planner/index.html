@@ -21,6 +21,13 @@
     <span class="ui-label" id="when"></span>
   </header>
   <div class="ui-stats" id="stats"></div>
+  <form class="ui-card" id="capture" aria-labelledby="capture-h">
+    <h2 id="capture-h" style="margin:0;font-size:16px">Capture a task</h2>
+    <div class="ui-row"><label for="cap" class="sr-only">Task to capture</label>
+      <input class="ui-input" id="cap" type="text" autocomplete="off" maxlength="300" placeholder="e.g. Ask for the simulator demo date">
+      <button class="ui-btn primary" type="submit">Add to inbox</button></div>
+    <div id="inbox"></div>
+  </form>
   <div class="ui-toggle" role="group" aria-label="Show">
     <button class="ui-btn" type="button" data-view="day" aria-pressed="true">Today</button>
     <button class="ui-btn" type="button" data-view="week" aria-pressed="false">Week</button>
@@ -38,7 +45,7 @@
 <script>
 UI.nav("Planner");
 const NAMES = { day: "Today", week: "This week", month: "This month" };
-const TOP = { day: "Top 3", week: "Top 5", month: "3 outcomes" };
+const TOP = { day: "Priorities", week: "Top 5", month: "3 outcomes" };
 const ROUTINE = { day: "morning-plan", week: "weekly-review", month: "monthly-plan" };
 const SKILL = { day: "/plan day", week: "/plan week", month: "/plan month" };
 const prefs = UI.store("planner-prefs", { view: "day" });
@@ -53,17 +60,17 @@ function stats() {
     if (!x.exists) return { v: "No plan yet", k: label, href, cls: k === "day" ? "attention" : "" };
     return { v: `${x.top.done} of ${x.top.total} done`, k: label, href };
   };
-  const tiles = [tile("day", "day", "Today's top 3"), tile("week", "week", "This week's top 5"), tile("month", "month", "This month's outcomes"),
+  const tiles = [tile("day", "day", "Today's priorities"), tile("week", "week", "This week's top 5"), tile("month", "month", "This month's outcomes"),
     { v: `${active.length} active`, k: data.projects.length ? `of ${data.projects.length} projects` : "Projects", href: "projects" }];
   $("#stats").innerHTML = tiles.map(t => `<a class="ui-stat ${t.cls || ""}" href="#${t.href}" data-go="${t.href}"><span class="v">${esc(t.v)}</span><span class="k">${esc(t.k)}</span></a>`).join("");
 }
 
-async function tick(path, line, text, done) {
+async function tick(path, line, text, done, scope = "#view") {
   const r = await fetch("/api/planner/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path, line, text, done }) });
   if (!r.ok) { UI.toast((await r.json()).error || "Could not save."); return load(true); }
   UI.say(`${text}: ${done ? "done" : "not done"}`);
   await load(true);
-  $(`#view input[data-line="${line}"]`)?.focus();
+  ($(`${scope} input[data-line="${line}"]`) || $(`${scope} input[data-line]`) || $("#cap"))?.focus();
 }
 
 function planView(k) {
@@ -127,13 +134,30 @@ function cart() {
     onClear: () => { notes = {}; UI.save("/api/data/planner", { notes }); boxFor = null; commentBox(); cart(); } });
 }
 
+function inboxView() {
+  const ib = data.inbox, el = $("#inbox");
+  if (!ib.items.length) { el.innerHTML = '<p class="ui-sub">The inbox is empty. Anything you add here goes into the next day plan.</p>'; return; }
+  el.innerHTML = `<p class="ui-sub">${ib.items.length} in the inbox. The next day plan sorts them into a day, a week or a project.</p>
+    <div class="ui-md"><ul class="tasks">${ib.items.map(t => `<li><label class="task"><input type="checkbox" data-line="${t.line}" data-text="${esc(t.text)}"><span>${esc(t.text)}</span></label></li>`).join("")}</ul></div>`;
+  el.querySelectorAll("input[data-line]").forEach(cb => cb.addEventListener("change", () => tick(ib.path, Number(cb.dataset.line), cb.dataset.text, cb.checked, "#inbox")));
+}
+
+$("#capture").addEventListener("submit", async e => {
+  e.preventDefault();
+  const input = $("#cap"), text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  const r = await fetch("/api/planner/capture", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+  if (!r.ok) { UI.toast((await r.json()).error || "Could not save."); return; }
+  input.value = ""; UI.say(`Added to the inbox: ${text}`); await load(true); input.focus();
+});
+
 function render(force) {
   const key = JSON.stringify([data, view, drafting]);
   if (!force && key === shown) return;
   shown = key;
   const active = document.activeElement?.closest("#view") ? document.activeElement.dataset.line : null;
   $("#when").textContent = `${data.weekday} ${data.today} · ${data.week}`;
-  stats();
+  stats(); inboxView();
   document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
   view === "projects" ? projectsView() : planView(view);
   if (active != null) $(`#view input[data-line="${active}"]`)?.focus();

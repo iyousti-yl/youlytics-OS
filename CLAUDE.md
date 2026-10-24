@@ -21,7 +21,7 @@ The memory catalog: @MEMORY.md
 
 - Micro apps: local apps live in `os/<name>/` (`index.html` + `app.json`), are served at `/app/<name>` and are built only from the UI parts in `os/ui/`. Review work Issam does in chat every week belongs in one; `/micro-app` builds the next. `os/review/` reviews artifacts and reports; `os/recos/` holds Friday suggestions; `os/brain/` maps every file and link (`python3 os/brain/graph.py` lists files nothing links to: give each a line in a router). Every page calls `UI.nav()` and passes the checks in `docs/ui-audit.md`.
 
-- Planning: `/plan day|week|month` makes plans in `planning/` from the active projects in `projects/`; `/project` adds or updates a project. Settings (hours, calendar, priorities) live in `planning/settings.md`. Routines `morning-plan`, `weekly-review` and `monthly-plan` draft them; the Planner app (`/app/planner`) ticks them off. Every new project goes through `/project` so it shows up in the plans.
+- Planning: `/plan day|week|month` makes plans in `planning/` from the active projects in `projects/`; `/project` adds or updates a project. Settings (hours, calendar, priorities) live in `planning/settings.md`. Routines `morning-plan`, `weekly-review` and `monthly-plan` draft them; the Planner app (`/app/planner`) ticks them off and captures stray tasks into `planning/inbox.md`, which `/plan day` sorts. Every new project goes through `/project` so it shows up in the plans.
 
 ## When a chat compacts, always keep
 - Decisions made and the reason for each

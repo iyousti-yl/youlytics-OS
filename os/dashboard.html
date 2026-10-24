@@ -113,7 +113,7 @@ function stats(s) {
   const over = r.filter(x => x.cost >= x.cap), apps = s.apps || [], bad = apps.filter(a => a.ok === false), c = s.cache || {};
   const pl = s.planner || {};
   const tiles = [
-    { href: "/app/planner", v: pl.exists ? `${pl.done} of ${pl.total} done` : "No plan yet", k: "Today's top 3", cls: pl.exists ? "" : "attention" },
+    { href: "/app/planner", v: pl.exists ? `${pl.done} of ${pl.total} done` : "No plan yet", k: "Today's priorities", cls: pl.exists ? "" : "attention" },
     { href: "#inbox", v: s.inbox?.unread ? `${s.inbox.unread} new` : "All read", k: "Inbox", cls: s.inbox?.unread ? "attention" : "" },
     { href: "#routines", v: `${money(spent)} of ${money(cap)}`, k: `${plural(on.length, "routine")} on this week` + (over.length ? `, ${over.length} over cap` : ""), cls: over.length ? "alert" : "" },
     { href: "#apps", v: bad.length ? `${bad.length} failing` : `${apps.filter(a => a.ok).length} of ${apps.length} working`, k: "Connected apps", cls: bad.length ? "alert" : "" },

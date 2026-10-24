@@ -11,7 +11,7 @@ ARMS A3. Every local micro app links `/ui/parts.css` and `/ui/parts.js` (served 
 | `.ui-scroll` + `.ui-table` | A table that scrolls inside its card, never the page |
 | `.ui-card`, `.ui-facts`, `.ui-tag`, `.ui-badge`, `.ui-btn` | Building blocks |
 | `UI.reviewCard({...})` | One item to approve, change (with a comment) or skip |
-| `UI.commentBox({...})` | A comment field |
+| `UI.commentBox({...})`, `.ui-input` | A comment field; a one-line input (give it a `<label>`) |
 | `UI.cart({...})` + `UI.copyBack(...)` + `UI.copy(text)` | Bottom bar that copies picks or comments back to Claude |
 | `UI.save(url, data)`, `UI.store(key, fallback)` | Save to a file through the server; small per-browser settings |
 | `UI.toast(msg)`, `UI.say(msg)`, `UI.esc(text)` | Feedback; tell screen-reader users what changed; safe HTML |

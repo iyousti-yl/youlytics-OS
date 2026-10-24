@@ -68,8 +68,9 @@ Passes when the side panel shows what the file points to and what points to it, 
 **Projects.** In Claude Code, run `/project new <a real project>` and answer its questions.
 Passes when `projects/<name>/project.md` has your goal, milestones and next action, and the project shows under **Projects** in the Planner.
 
-**Plans.** Run `/plan week`, approve the draft, then `/plan day`. Open **Planner** in the top bar and tick off one of today's top 3 with the keyboard (Tab, then Space).
-Passes when each priority names its project, nothing is invented (no meetings without a calendar), the tick shows as `- [x]` in `planning/day/<today>.md`, and the dashboard's first tile counts it.
+**Plans.** Run `/plan week`, approve the draft, then `/plan day`. Open **Planner** in the top bar and tick off one of today's priorities with the keyboard (Tab, then Space).
+Add a task in the Planner's capture box first; it should be sorted out of `planning/inbox.md` by `/plan day`.
+Passes when each priority names its project, weekdays get at most 2 and weekend days 3, nothing is invented (no meetings without a calendar), the tick shows as `- [x]` in `planning/day/<today>.md`, and the dashboard's first tile counts it.
 
 **Routines.** On the dashboard, run **Morning plan** once.
 Passes when today's plan appears (or is updated) and the inbox shows a one-line summary with its cost.

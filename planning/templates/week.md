@@ -18,5 +18,7 @@ Month: [{{month}}](../month/{{month}}.md) · Last week: [{{prev_week}}]({{prev_w
 | Wed |  |  |
 | Thu |  |  |
 | Fri |  |  |
+| Sat |  |  |
+| Sun |  |  |
 
 ## Not this week

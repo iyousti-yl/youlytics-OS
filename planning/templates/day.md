@@ -2,7 +2,7 @@
 
 Week: [{{week}}](../week/{{week}}.md) · Focus: 
 
-## Top 3
+## Priorities
 - [ ] 
 
 ## Meetings

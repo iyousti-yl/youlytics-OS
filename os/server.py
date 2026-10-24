@@ -256,7 +256,7 @@ def review_items(days=14):
 
 
 def planner_glance():
-    """Today's top 3 for the dashboard tile."""
+    """Today's priorities for the dashboard tile."""
     day = plans.summary()["plans"]["day"]
     return {"exists": day["exists"], **(day.get("top") or {"done": 0, "total": 0})}
 
@@ -266,7 +266,7 @@ def latest_reports(limit=10):
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
 
 
-POSTS = ("/api/run", "/api/router", "/api/routines/run", "/api/inbox/read", "/api/planner/toggle")
+POSTS = ("/api/run", "/api/router", "/api/routines/run", "/api/inbox/read", "/api/planner/toggle", "/api/planner/capture")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -391,6 +391,10 @@ class Handler(BaseHTTPRequestHandler):
                 routine_runs[rid] = "running"
             threading.Thread(target=run_routine, args=(rid,), daemon=True).start()
             return self._send(202, {"ok": True})
+        if self.path == "/api/planner/capture":
+            with lock:
+                line = plans.capture(req.get("text", ""))
+            return self._send(200 if line else 400, {"ok": True, "line": line} if line else {"error": "Type a task first."})
         if self.path == "/api/planner/toggle":
             if not isinstance(req.get("line"), int):
                 return self._send(400, {"error": "bad request"})

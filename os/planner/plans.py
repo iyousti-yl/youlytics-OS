@@ -6,6 +6,8 @@
                                                make the plan file from its template if it doesn't exist; prints its path
   python3 os/planner/plans.py new project "Name" "One-line goal"
                                                make projects/<name>/project.md and add it to projects/projects.md
+  python3 os/planner/plans.py capture "Call the printer about business cards"
+                                               add a task to planning/inbox.md (what the Planner's capture box does)
   python3 os/planner/plans.py --json           the same summary as JSON (the dashboard serves it at /api/planner)
 
 Plans are plain Markdown in planning/; projects in projects/<name>/project.md. Nothing else is stored.
@@ -19,8 +21,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 PLANNING, PROJECTS = ROOT / "planning", ROOT / "projects"
 TEMPLATES = PLANNING / "templates"
+INBOX = PLANNING / "inbox.md"
+INBOX_HEAD = "# Inbox\n\nQuick captures from the Planner. `/plan day` moves each one to a day, a week or a project, then deletes it here.\n\n"
 TASK = re.compile(r"^(\s*)- \[( |x|X)\] (.*)$")
-TOP = {"day": "Top 3", "week": "Top 5", "month": "3 outcomes"}
+TOP = {"day": "Priorities", "week": "Top 5", "month": "3 outcomes"}
 
 
 def week_id(d):
@@ -122,10 +126,27 @@ def projects():
     return out
 
 
+def capture(text, today=None):
+    """Add one task to the inbox. Returns the line, or None if there's nothing usable."""
+    text = " ".join(str(text).split())[:300].lstrip("#>-*[] ")
+    if not text:
+        return None
+    line = f"- [ ] {text} (captured {(today or date.today()).isoformat()})"
+    body = INBOX.read_text(encoding="utf-8") if INBOX.is_file() else INBOX_HEAD
+    INBOX.write_text(body.rstrip("\n") + ("\n\n" if body.strip() == INBOX_HEAD.strip() else "\n") + line + "\n", encoding="utf-8")
+    return line
+
+
+def inbox():
+    text = INBOX.read_text(encoding="utf-8") if INBOX.is_file() else ""
+    return {"path": str(INBOX.relative_to(ROOT)), "items": [t for t in tasks(text) if not t["done"]],
+            "tasks": tasks(text)}
+
+
 def summary(d=None):
     d = d or date.today()
     return {"today": d.isoformat(), "weekday": d.strftime("%A"), "week": week_id(d), "month": month_id(d),
-            "plans": {k: plan(k, d) for k in ("day", "week", "month")}, "projects": projects()}
+            "plans": {k: plan(k, d) for k in ("day", "week", "month")}, "projects": projects(), "inbox": inbox()}
 
 
 def toggle(rel, line, text, done):
@@ -146,6 +167,10 @@ def toggle(rel, line, text, done):
 
 
 def main(argv):
+    if argv[:1] == ["capture"] and len(argv) >= 2:
+        line = capture(" ".join(argv[1:]))
+        print(line or "Nothing to capture.")
+        return 0 if line else 1
     if argv[:1] == ["new"] and len(argv) >= 2:
         if argv[1] == "project" and len(argv) >= 3:
             print(new_project(argv[2], argv[3] if len(argv) > 3 else ""))
@@ -164,6 +189,7 @@ def main(argv):
         state = f"{p['top']['done']} of {p['top']['total']} {TOP[k].lower()} done" if p["exists"] else "not made yet"
         print(f"  {k:<6} {p['path']:<32} {state}")
     active = [p for p in s["projects"] if p["status"] == "active"]
+    print(f"\n{len(s['inbox']['items'])} in the inbox ({s['inbox']['path']})")
     print(f"\n{len(active)} active of {len(s['projects'])} projects")
     for p in active:
         print(f"  {p['name']}: {p['next'][0] if p['next'] else 'no next action'}")
