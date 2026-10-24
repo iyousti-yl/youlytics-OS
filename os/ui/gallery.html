@@ -36,8 +36,13 @@
       <li><span class="main"><b>ui-status</b><span class="meta">.ok .bad .busy, always with a word, never colour alone</span></span><span class="ui-status bad">Over cap</span></li>
     </ul>
   </section>
+  <section class="ui-card">
+    <h2>Toggle and Markdown</h2>
+    <div class="ui-toggle" role="group" aria-label="Demo view"><button class="ui-btn" type="button" aria-pressed="true">Today</button><button class="ui-btn" type="button" aria-pressed="false">Week</button></div>
+    <div id="md"></div>
+  </section>
   <div class="ui-grid" id="cards"></div>
-  <section class="ui-card"><h2>Comment box</h2><div id="comment"></div></section>
+  <section class="ui-card"><h2>Comment box and input</h2><div id="comment"></div><div class="ui-row"><label for="demo-input" class="sr-only">Demo input</label><input class="ui-input" id="demo-input" placeholder=".ui-input"><button class="ui-btn primary" type="button">Add</button></div></section>
 </main>
 <script src="/ui/parts.js"></script>
 <script>
@@ -46,6 +51,7 @@ const demo = UI.reviewCard({ title: "Review card", tag: "artifact", meta: "UI.re
   body: "<p>Approve, change (opens the comment box) or skip. onChange gets {verdict, comment}.</p>",
   onChange: s => UI.cart({ count: s.verdict ? 1 : 0, label: "reviewed", onCopy: () => UI.copy(UI.copyBack("Copy-back text:", [`- ${s.verdict} ${s.comment}`], "")) }) });
 document.querySelector("#cards").append(demo);
+document.querySelector("#md").append(UI.markdown("## Top 3\n- [x] A done task\n- [ ] An open task, `UI.markdown(text, {onTask})`\n\n| Project | Status |\n|---|---|\n| Client X | active |", { onTask: (line, text, done) => UI.say(`${text}: ${done ? "done" : "not done"}`) }));
 document.querySelector("#comment").append(UI.commentBox({ placeholder: "UI.commentBox({placeholder, onInput})" }));
 </script>
 </body>

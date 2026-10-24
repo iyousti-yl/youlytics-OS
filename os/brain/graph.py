@@ -23,7 +23,8 @@ TEXT = {".md", ".html", ".json", ".py", ".js", ".css", ".txt", ".svg", ".example
 SKIP = {".gitkeep", ".DS_Store"}
 GENERIC = {"CHANGELOG.md", "NOTES.md", "index.html", "README.md", "README.txt", "app.json", "config.json", "SKILL.md"}
 GROUPS = {"knowledge": "knowledge", "business": "business", "life": "life", "memory": "memory",
-          ".claude": "skills", "os": "os", "brand": "brand", "artifacts": "brand", "docs": "docs"}
+          ".claude": "skills", "os": "os", "brand": "brand", "artifacts": "brand", "docs": "core",
+          "planning": "planning", "projects": "planning"}
 MD_LINK = re.compile(r"\]\(([^)\s#]+)")
 WIKI = re.compile(r"\[\[([^\]|#]+)")
 IMPORT = re.compile(r"(?:^|\s)@([\w./-]+\.md)")

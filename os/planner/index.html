@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>youlytics Planner</title>
+<link rel="stylesheet" href="/ui/parts.css">
+<style>
+.plan-head{display:flex;gap:8px 12px;align-items:baseline;flex-wrap:wrap}
+.plan-head h2{margin:0;font-size:18px}
+.plan-head code{color:var(--muted);font-size:13px}
+.ui-rows details summary{cursor:pointer;color:var(--accent);font-size:14px;min-height:32px;display:inline-flex;align-items:center}
+.ui-rows details pre{margin:6px 0 0;white-space:pre-wrap;font:13px/1.5 var(--f-mono);background:var(--mist);border-radius:8px;padding:10px;max-height:320px;overflow:auto}
+.next{font-size:14px}
+</style>
+</head>
+<body>
+<main class="ui-page">
+  <header class="ui-header">
+    <h1>Planner</h1>
+    <span class="ui-label" id="when"></span>
+  </header>
+  <div class="ui-stats" id="stats"></div>
+  <form class="ui-card" id="capture" aria-labelledby="capture-h">
+    <h2 id="capture-h" style="margin:0;font-size:16px">Capture a task</h2>
+    <div class="ui-row"><label for="cap" class="sr-only">Task to capture</label>
+      <input class="ui-input" id="cap" type="text" autocomplete="off" maxlength="300" placeholder="e.g. Ask for the simulator demo date">
+      <button class="ui-btn primary" type="submit">Add to inbox</button></div>
+    <div id="inbox"></div>
+  </form>
+  <div class="ui-toggle" role="group" aria-label="Show">
+    <button class="ui-btn" type="button" data-view="day" aria-pressed="true">Today</button>
+    <button class="ui-btn" type="button" data-view="week" aria-pressed="false">Week</button>
+    <button class="ui-btn" type="button" data-view="month" aria-pressed="false">Month</button>
+    <button class="ui-btn" type="button" data-view="projects" aria-pressed="false">Projects</button>
+  </div>
+  <section class="ui-card" id="view" aria-labelledby="view-h"></section>
+  <section class="ui-card" id="change" aria-labelledby="change-h">
+    <h2 id="change-h" style="margin:0;font-size:16px">Change this plan</h2>
+    <p class="ui-sub">Write what should change. It goes to the copy-back bar, and Claude updates the file when you paste it.</p>
+    <div id="comment"></div>
+  </section>
+</main>
+<script src="/ui/parts.js"></script>
+<script>
+UI.nav("Planner");
+const NAMES = { day: "Today", week: "This week", month: "This month" };
+const TOP = { day: "Priorities", week: "Top 5", month: "3 outcomes" };
+const ROUTINE = { day: "morning-plan", week: "weekly-review", month: "monthly-plan" };
+const SKILL = { day: "/plan day", week: "/plan week", month: "/plan month" };
+const prefs = UI.store("planner-prefs", { view: "day" });
+let view = prefs.get().view, data = null, shown = "", notes = {}, drafting = null;
+const $ = s => document.querySelector(s);
+const esc = UI.esc;
+
+function stats() {
+  const p = data.plans, active = data.projects.filter(x => x.status === "active");
+  const tile = (k, href, label) => {
+    const x = p[k];
+    if (!x.exists) return { v: "No plan yet", k: label, href, cls: k === "day" ? "attention" : "" };
+    return { v: `${x.top.done} of ${x.top.total} done`, k: label, href };
+  };
+  const tiles = [tile("day", "day", "Today's priorities"), tile("week", "week", "This week's top 5"), tile("month", "month", "This month's outcomes"),
+    { v: `${active.length} active`, k: data.projects.length ? `of ${data.projects.length} projects` : "Projects", href: "projects" }];
+  $("#stats").innerHTML = tiles.map(t => `<a class="ui-stat ${t.cls || ""}" href="#${t.href}" data-go="${t.href}"><span class="v">${esc(t.v)}</span><span class="k">${esc(t.k)}</span></a>`).join("");
+}
+
+async function tick(path, line, text, done, scope = "#view") {
+  const r = await fetch("/api/planner/toggle", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ path, line, text, done }) });
+  if (!r.ok) { UI.toast((await r.json()).error || "Could not save."); return load(true); }
+  UI.say(`${text}: ${done ? "done" : "not done"}`);
+  await load(true);
+  ($(`${scope} input[data-line="${line}"]`) || $(`${scope} input[data-line]`) || $("#cap"))?.focus();
+}
+
+function planView(k) {
+  const p = data.plans[k], el = $("#view");
+  const label = k === "day" ? `${data.weekday} ${data.today}` : k === "week" ? data.week : data.month;
+  el.innerHTML = `<div class="plan-head"><h2 id="view-h" tabindex="-1">${NAMES[k]}: ${esc(label)}</h2><code>${esc(p.path)}</code></div>`;
+  if (!p.exists) {
+    const busy = drafting === k;
+    el.insertAdjacentHTML("beforeend", `<p>No ${k} plan yet.</p>
+      <div class="ui-row"><button class="ui-btn primary" type="button" id="draft" ${busy ? "disabled" : ""}>${busy ? "Drafting…" : `Draft it now`}</button>
+      <span class="ui-sub">or run <code>${SKILL[k]}</code> in Claude Code to plan it together.</span></div>
+      <p class="ui-sub" role="status" id="draft-status">${busy ? "Claude is drafting it. This usually takes a minute or two; the plan shows here when it's ready." : ""}</p>`);
+    $("#draft").onclick = () => draft(k);
+    return;
+  }
+  el.append(UI.markdown(p.text, { skipTitle: true, onTask: (line, text, done) => tick(p.path, line, text, done) }));
+  el.querySelectorAll(".ui-md h3").forEach(h => {  // say so when a section is still empty
+    if (!h.nextElementSibling || h.nextElementSibling.tagName === "H3") h.insertAdjacentHTML("afterend", '<p class="ui-sub">Nothing yet</p>');
+  });
+}
+
+function projectsView() {
+  const el = $("#view");
+  el.innerHTML = `<div class="plan-head"><h2 id="view-h" tabindex="-1">Projects</h2><code>projects/</code></div>`;
+  if (!data.projects.length) {
+    el.insertAdjacentHTML("beforeend", '<p>No projects yet. Add one in Claude Code with <code>/project new &lt;name&gt;</code>; every active project feeds the next plan.</p>');
+    return;
+  }
+  const order = { active: 0, paused: 1, done: 2 };
+  const rows = [...data.projects].sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+  el.insertAdjacentHTML("beforeend", `<ul class="ui-rows">${rows.map(p => `<li>
+    <div class="main"><strong>${esc(p.name)}</strong>
+      <span class="meta">${esc(p.area)}${p.due ? ` · due ${esc(p.due)}` : ""} · ${p.milestones.total ? `${p.milestones.done} of ${p.milestones.total} milestones` : "no milestones yet"}</span>
+      ${p.goal ? `<span>${esc(p.goal)}</span>` : ""}
+      <span class="next">Next: ${p.next.length ? esc(p.next[0]) : '<span class="ui-sub">no next action</span>'}</span>
+      <details data-path="${esc(p.path)}"><summary>Show the file<span class="sr-only">: ${esc(p.name)}</span></summary><pre tabindex="0" aria-label="${esc(p.name)} file"></pre></details></div>
+    <span class="ui-status ${p.status === "active" ? "ok" : p.status === "paused" ? "busy" : ""}">${esc(p.status[0].toUpperCase() + p.status.slice(1))}</span>
+  </li>`).join("")}</ul>`);
+  el.querySelectorAll("details").forEach(d => d.addEventListener("toggle", async () => {
+    const pre = d.querySelector("pre");
+    if (d.open && !pre.textContent) pre.textContent = await (await fetch(`/api/brain/file?path=${encodeURIComponent(d.dataset.path)}`)).text();
+  }));
+}
+
+let boxFor = null;
+function commentBox() {
+  const key = view === "projects" ? "projects/" : data.plans[view].path;
+  if (boxFor === key) return;
+  boxFor = key;
+  const box = UI.commentBox({ value: notes[key] || "", label: `What should change in ${key}`, placeholder: "e.g. Swap the second priority for the offer to Client X",
+    onInput: v => { if (v.trim()) notes[key] = v; else delete notes[key]; UI.save("/api/data/planner", { notes }); cart(); } });
+  $("#comment").replaceChildren(box);
+}
+
+function cart() {
+  const keys = Object.keys(notes);
+  UI.cart({ count: keys.length, label: keys.length === 1 ? "change to send" : "changes to send", button: "Copy changes for Claude",
+    onCopy: () => {
+      UI.copy(UI.copyBack("Update my plans (use /plan, and /project for projects):", keys.map(k => `- ${k}: ${notes[k]}`), "Show me the changed lines when done."));
+    },
+    onClear: () => { notes = {}; UI.save("/api/data/planner", { notes }); boxFor = null; commentBox(); cart(); } });
+}
+
+function inboxView() {
+  const ib = data.inbox, el = $("#inbox");
+  if (!ib.items.length) { el.innerHTML = '<p class="ui-sub">The inbox is empty. Anything you add here goes into the next day plan.</p>'; return; }
+  el.innerHTML = `<p class="ui-sub">${ib.items.length} in the inbox. The next day plan sorts them into a day, a week or a project.</p>
+    <div class="ui-md"><ul class="tasks">${ib.items.map(t => `<li><label class="task"><input type="checkbox" data-line="${t.line}" data-text="${esc(t.text)}"><span>${esc(t.text)}</span></label></li>`).join("")}</ul></div>`;
+  el.querySelectorAll("input[data-line]").forEach(cb => cb.addEventListener("change", () => tick(ib.path, Number(cb.dataset.line), cb.dataset.text, cb.checked, "#inbox")));
+}
+
+$("#capture").addEventListener("submit", async e => {
+  e.preventDefault();
+  const input = $("#cap"), text = input.value.trim();
+  if (!text) { input.focus(); return; }
+  const r = await fetch("/api/planner/capture", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) });
+  if (!r.ok) { UI.toast((await r.json()).error || "Could not save."); return; }
+  input.value = ""; UI.say(`Added to the inbox: ${text}`); await load(true); input.focus();
+});
+
+function render(force) {
+  const key = JSON.stringify([data, view, drafting]);
+  if (!force && key === shown) return;
+  shown = key;
+  const active = document.activeElement?.closest("#view") ? document.activeElement.dataset.line : null;
+  $("#when").textContent = `${data.weekday} ${data.today} · ${data.week}`;
+  stats(); inboxView();
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+  view === "projects" ? projectsView() : planView(view);
+  if (active != null) $(`#view input[data-line="${active}"]`)?.focus();
+  commentBox(); cart();
+}
+
+async function load(force) {
+  data = await (await fetch("/api/planner")).json();
+  if (drafting && data.plans[drafting].exists) { UI.say(`${NAMES[drafting]}'s plan is ready.`); drafting = null; }
+  render(force);
+}
+
+async function draft(k) {
+  const r = await fetch("/api/routines/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: ROUTINE[k] }) });
+  if (!r.ok && r.status !== 409) { UI.toast((await r.json()).error || "Could not start."); return; }
+  drafting = k; UI.say("Drafting the plan. It shows here when it's ready."); render(true);
+}
+
+function go(v) {
+  view = v; prefs.set({ view }); render(true);
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-view]"); if (b) return go(b.dataset.view);
+  const s = e.target.closest("[data-go]"); if (s) { e.preventDefault(); go(s.dataset.go); $("#view-h")?.focus(); }
+});
+
+(async () => {
+  try { notes = (await (await fetch("/api/data/planner")).json()).notes || {}; } catch { notes = {}; }
+  if (["day", "week", "month", "projects"].includes(location.hash.slice(1))) view = location.hash.slice(1);
+  await load(true);
+  setInterval(() => { if (!document.hidden) load(); }, drafting ? 5000 : 10000);
+})();
+</script>
+</body>
+</html>

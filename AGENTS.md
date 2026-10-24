@@ -10,6 +10,8 @@ Start from the department router, then open only the file you need.
 | Knowledge | [knowledge/knowledge.md](knowledge/knowledge.md) | Notes, reading, references, ideas |
 | Business | [business/business.md](business/business.md) | Clients, offers, content, finance, operations |
 | Life | [life/life.md](life/life.md) | Health, home, goals, personal admin |
+| Projects | [projects/projects.md](projects/projects.md) | One folder per project: goal, milestones, next actions, status |
+| Planning | [planning/planning.md](planning/planning.md) | Day, week and month plans that pull from the active projects |
 
 - `MEMORY.md` is the memory catalog (one line per file in `memory/`). Check it before searching.
 - `artifacts/` holds every deck, infographic and PDF, with `artifacts/index.html` as the inbox (newest first).
@@ -18,7 +20,7 @@ Start from the department router, then open only the file you need.
 - `os/` holds the local dashboard (`python3 os/server.py`, http://127.0.0.1:8765) and the machinery behind it:
   - `os/router/` and `os/ask`: model routing
   - `os/routines/`: scheduled routines, their caps and run log; results go to the dashboard inbox
-  - `os/recos/`: Friday suggestions; `os/review/`: the review micro app; `os/ui/`: UI parts every micro app is built from; `os/brain/`: the Brain map of every file and how they link
+  - `os/recos/`: Friday suggestions; `os/review/`: the review micro app; `os/ui/`: UI parts every micro app is built from; `os/brain/`: the Brain map of every file and how they link; `os/planner/`: the Planner app and `plans.py` (make plan files, list projects)
   - `os/memory/`: cold-cache report and keep-warm pings
   - `os/apps/apps.json`: how each outside app is reached; `os/chrome-clipper/`: the browser extension
   - `os/skills/usage.py`: skill usage ranking

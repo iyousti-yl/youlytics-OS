@@ -30,7 +30,9 @@ RECOS = OS_DIR / "recos"
 PAGES = {"/recos": RECOS / "index.html"}
 ARTIFACTS = ROOT / "artifacts"
 sys.path.insert(0, str(OS_DIR / "brain"))
+sys.path.insert(0, str(OS_DIR / "planner"))
 import graph as brain  # noqa: E402
+import plans  # noqa: E402
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".json": "application/json",
          ".svg": "image/svg+xml", ".png": "image/png", ".jpg": "image/jpeg", ".pdf": "application/pdf",
          ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8"}
@@ -253,12 +255,18 @@ def review_items(days=14):
     return items
 
 
+def planner_glance():
+    """Today's priorities for the dashboard tile."""
+    day = plans.summary()["plans"]["day"]
+    return {"exists": day["exists"], **(day.get("top") or {"done": 0, "total": 0})}
+
+
 def latest_reports(limit=10):
     files = sorted(REPORTS.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)[:limit]
     return [{"name": p.name, "modified": datetime.fromtimestamp(p.stat().st_mtime).strftime("%Y-%m-%d %H:%M")} for p in files]
 
 
-POSTS = ("/api/run", "/api/router", "/api/routines/run", "/api/inbox/read")
+POSTS = ("/api/run", "/api/router", "/api/routines/run", "/api/inbox/read", "/api/planner/toggle", "/api/planner/capture")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -294,7 +302,7 @@ class Handler(BaseHTTPRequestHandler):
                                     "router": {"enabled": router.get("enabled", True), "stats": stats},
                                     "skills": skill_usage(), "routines": routines_state(),
                                     "inbox": inbox(), "cache": cache_report(), "apps": apps_state(),
-                                    "micro_apps": micro_apps()})
+                                    "micro_apps": micro_apps(), "planner": planner_glance()})
         path, _, query = self.path.partition("?")
         if path in PAGES:
             return self._send(200, PAGES[path].read_bytes(), TYPES[".html"])
@@ -310,6 +318,8 @@ class Handler(BaseHTTPRequestHandler):
             f = OS_DIR / Path(path[10:]).name / "data.json"
             if (f.parent / "app.json").is_file():
                 return self._send(200, f.read_bytes() if f.is_file() else b"{}")
+        if path == "/api/planner":
+            return self._send(200, plans.summary())
         if path == "/api/brain":
             return self._send(200, brain.build())
         if path == "/api/brain/file":
@@ -381,6 +391,16 @@ class Handler(BaseHTTPRequestHandler):
                 routine_runs[rid] = "running"
             threading.Thread(target=run_routine, args=(rid,), daemon=True).start()
             return self._send(202, {"ok": True})
+        if self.path == "/api/planner/capture":
+            with lock:
+                line = plans.capture(req.get("text", ""))
+            return self._send(200 if line else 400, {"ok": True, "line": line} if line else {"error": "Type a task first."})
+        if self.path == "/api/planner/toggle":
+            if not isinstance(req.get("line"), int):
+                return self._send(400, {"error": "bad request"})
+            with lock:
+                ok = plans.toggle(str(req.get("path", "")), req["line"], str(req.get("text", "")), bool(req.get("done")))
+            return self._send(200 if ok else 409, {"ok": ok} if ok else {"error": "The plan changed on disk. Reload and try again."})
         if self.path == "/api/inbox/read":
             with lock:
                 mark_read(None if req.get("all") else (req.get("ts"), req.get("id")))

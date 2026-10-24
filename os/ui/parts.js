@@ -10,14 +10,15 @@
    UI.reviewCard({title, tag, meta, body, facts, verdict, comment, onChange})
    UI.cart({count, label, onCopy, onClear})   bottom bar with the copy-back button
    UI.copyBack(intro, lines, outro)   the text that goes back to Claude
-   UI.nav(current)                    the shared top bar (Dashboard, Brain, Recos, Review) with a skip link
+   UI.nav(current)                    the shared top bar (Dashboard, Planner, Brain, Recos, Review) with a skip link
    UI.say(message)                    tell screen-reader users what just changed
+   UI.markdown(text, {onTask, skipTitle})  plain Markdown to HTML (headings, lists, - [ ] tasks, tables); onTask(line, text, done) makes tasks tickable
 */
 (function () {
   const UI = {};
 
   const MARK = '<svg viewBox="0 0 88 88" aria-hidden="true"><rect width="88" height="88" rx="18" fill="#1F3B70"/><path d="M26 24 L44 48 M62 24 L36 68" stroke="#fff" stroke-width="9" stroke-linecap="round" fill="none"/><circle cx="62" cy="24" r="6" fill="#D9962B"/></svg>';
-  const PAGES = [["Dashboard", "/"], ["Brain", "/app/brain"], ["Recos", "/recos"], ["Review", "/app/review"]];
+  const PAGES = [["Dashboard", "/"], ["Planner", "/app/planner"], ["Brain", "/app/brain"], ["Recos", "/recos"], ["Review", "/app/review"]];
 
   UI.nav = current => {
     const main = document.querySelector("main");
@@ -124,6 +125,49 @@
     bar.querySelector("[data-copy]").onclick = onCopy;
     if (onClear) bar.querySelector("[data-clear]").onclick = onClear;
     return bar;
+  };
+
+  UI.markdown = (text, { onTask, skipTitle } = {}) => {
+    const inline = s => UI.esc(s)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, label, href) => /^(https?:|\/|#)/.test(href.replace(/&amp;/g, "&")) ? `<a href="${href}">${label}</a>` : label);
+    const lines = String(text || "").split("\n"), out = [];
+    let list = null, tag = null, i = 0;
+    const close = () => { if (list) { out.push(`</${tag}>`); list = tag = null; } };
+    const open = (t, cls = "") => { if (list !== t + cls) { close(); out.push(`<${t}${cls ? ` class="${cls}"` : ""}>`); list = t + cls; tag = t; } };
+    for (; i < lines.length; i++) {
+      const l = lines[i], t = l.trim();
+      let m;
+      if (!t) { close(); continue; }
+      if (skipTitle && !out.length && !list && /^# /.test(t)) continue;  // the page already shows a title
+      if ((m = /^(#{1,3}) (.*)$/.exec(t))) { close(); const h = Math.min(m[1].length + 1, 3); out.push(`<h${h}>${inline(m[2])}</h${h}>`); continue; }
+      if ((m = /^- \[( |x|X)\](?: (.*))?$/.exec(t))) {
+        if (!(m[2] || "").trim()) continue;
+        open("ul", "tasks");
+        const done = m[1] !== " ";
+        out.push(`<li><label class="task${done ? " done" : ""}"><input type="checkbox" ${done ? "checked" : ""} ${onTask ? "" : "disabled"} data-line="${i}" data-text="${UI.esc(m[2].trim())}"><span>${inline(m[2])}</span></label></li>`);
+        continue;
+      }
+      if ((m = /^[-*] (.*)$/.exec(t))) { if (m[1].trim()) { open("ul"); out.push(`<li>${inline(m[1])}</li>`); } continue; }
+      if ((m = /^\d+\. (.*)$/.exec(t))) { open("ol"); out.push(`<li>${inline(m[1])}</li>`); continue; }
+      if (t.startsWith("|")) {
+        close();
+        const rows = [];
+        for (; i < lines.length && lines[i].trim().startsWith("|"); i++) rows.push(lines[i].trim().replace(/^\||\|$/g, "").split("|").map(c => c.trim()));
+        i--;
+        const body = rows.slice(rows[1] && rows[1].every(c => /^:?-+:?$/.test(c)) ? 2 : 1);
+        out.push(`<div class="ui-scroll"><table class="ui-table"><thead><tr>${rows[0].map(c => `<th scope="col">${inline(c)}</th>`).join("")}</tr></thead><tbody>${
+          body.map(r => `<tr>${r.map(c => `<td>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+        continue;
+      }
+      close(); out.push(`<p>${inline(t)}</p>`);
+    }
+    close();
+    const el = document.createElement("div");
+    el.className = "ui-md"; el.innerHTML = out.join("");
+    if (onTask) el.querySelectorAll("input[data-line]").forEach(cb => cb.addEventListener("change", () => onTask(Number(cb.dataset.line), cb.dataset.text, cb.checked)));
+    return el;
   };
 
   UI.copyBack = (intro, lines, outro) => [intro, "", ...lines, "", outro].filter(x => x !== undefined).join("\n").trim();

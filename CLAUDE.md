@@ -4,7 +4,7 @@ The map and the rules shared with Codex: @AGENTS.md
 The memory catalog: @MEMORY.md
 
 ## Claude Code only
-- Skills: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`, `/teach`, `/routines-review`, `/cap-routine`, `/suggest-routines`, `/note`, `/calibrate`, `/connect`, `/micro-app` in `.claude/skills/`.
+- Skills: `/tone`, `/wildcard`, `/brand`, `/clean-up`, `/business-data`, `/grammar`, `/teach`, `/routines-review`, `/cap-routine`, `/suggest-routines`, `/note`, `/calibrate`, `/connect`, `/micro-app`, `/plan`, `/project` in `.claude/skills/`.
 - Never correct the same thing twice. When Issam gives feedback on a skill or app mid-job, offer `/note` so it's parked without breaking the flow. When you notice a lesson worth keeping (a repeat correction, a lasting preference or rule), offer `/calibrate` in one line instead of saving it quietly. Open notes live in each skill's `NOTES.md`; `/note apply` works through them.
 - Skills improve from feedback. When Issam corrects or rates a skill's output, offer `/teach` in one line; never change a skill silently. Each skill keeps a `CHANGELOG.md`.
 - `python3 os/skills/usage.py` ranks skills by runs and tokens from local sessions. Improve the most-used skill first.
@@ -20,6 +20,8 @@ The memory catalog: @MEMORY.md
 - Mods: `.claude/statusline.py` is the status line (model, context, 5h/7d limits, cache warm or cold with the reload cost, branch). `os/chrome-clipper/` is a Chrome extension that saves pages to `knowledge/reading/` through the dashboard server. Clips are raw: summarise one when Issam asks.
 
 - Micro apps: local apps live in `os/<name>/` (`index.html` + `app.json`), are served at `/app/<name>` and are built only from the UI parts in `os/ui/`. Review work Issam does in chat every week belongs in one; `/micro-app` builds the next. `os/review/` reviews artifacts and reports; `os/recos/` holds Friday suggestions; `os/brain/` maps every file and link (`python3 os/brain/graph.py` lists files nothing links to: give each a line in a router). Every page calls `UI.nav()` and passes the checks in `docs/ui-audit.md`.
+
+- Planning: `/plan day|week|month` makes plans in `planning/` from the active projects in `projects/`; `/project` adds or updates a project. Settings (hours, calendar, priorities) live in `planning/settings.md`. Routines `morning-plan`, `weekly-review` and `monthly-plan` draft them; the Planner app (`/app/planner`) ticks them off and captures stray tasks into `planning/inbox.md`, which `/plan day` sorts. Every new project goes through `/project` so it shows up in the plans.
 
 ## When a chat compacts, always keep
 - Decisions made and the reason for each

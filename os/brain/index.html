@@ -6,8 +6,8 @@
 <title>youlytics Brain</title>
 <link rel="stylesheet" href="/ui/parts.css">
 <style>
-:root{--g-core:#A86A0E;--g-knowledge:#2F6DB5;--g-business:#1F3B70;--g-life:#7A68AE;--g-memory:#5E4E8C;--g-skills:#2E7476;--g-os:#4F5B6E;--g-brand:#8A6A3E;--edge:#9AA7BA;--highlight:#D9962B}
-@media (prefers-color-scheme: dark){:root{--g-core:#E9B35A;--g-knowledge:#7FA7E0;--g-business:#A9BEE8;--g-life:#B7A6E0;--g-memory:#9C8CD0;--g-skills:#6CC0BE;--g-os:#A3AEC0;--g-brand:#C9A97C;--edge:#4A5C78;--highlight:#E9B35A}}
+:root{--g-core:#A86A0E;--g-knowledge:#2F6DB5;--g-business:#1F3B70;--g-life:#7A68AE;--g-memory:#5E4E8C;--g-skills:#2E7476;--g-os:#4F5B6E;--g-brand:#8A6A3E;--g-planning:#3F7A3A;--edge:#9AA7BA;--highlight:#D9962B}
+@media (prefers-color-scheme: dark){:root{--g-core:#E9B35A;--g-knowledge:#7FA7E0;--g-business:#A9BEE8;--g-life:#B7A6E0;--g-memory:#9C8CD0;--g-skills:#6CC0BE;--g-os:#A3AEC0;--g-brand:#C9A97C;--g-planning:#8CC48A;--edge:#4A5C78;--highlight:#E9B35A}}
 .brain{max-width:none;padding-bottom:16px}
 .brain-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .brain-tools input[type=search]{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);min-width:220px;flex:1;max-width:360px}
@@ -75,7 +75,7 @@ canvas:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 <script src="/ui/parts.js"></script>
 <script>
 UI.nav("Brain");
-const GROUPS = { core: "Maps and guides", knowledge: "Knowledge", business: "Business", life: "Life", memory: "Memory",
+const GROUPS = { core: "Maps and guides", knowledge: "Knowledge", business: "Business", life: "Life", planning: "Planning and projects", memory: "Memory",
                  skills: "Skills", os: "OS machinery", brand: "Brand and artifacts" };
 const css = getComputedStyle(document.documentElement);
 const color = g => css.getPropertyValue(`--g-${g}`).trim() || "#4F5B6E";
