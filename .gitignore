@@ -6,3 +6,15 @@ os/reports/*.log
 os/router/log.jsonl
 __pycache__/
 *.pyc
+os/routines/state.json
+os/routines/runs.jsonl
+os/routines/cron.log
+os/inbox.jsonl
+os/reports/routines/
+os/reports/*.md
+os/recos/recos.json
+os/recos/week-prompts.json
+os/memory/pings.jsonl
+os/memory/keepwarm-state.json
+os/memory/keepwarm.log
+os/*/data.json

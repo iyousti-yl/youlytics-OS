@@ -29,6 +29,12 @@ def own_skills():
     return sorted(p.parent.name for p in SKILLS.glob("*/SKILL.md"))
 
 
+def open_notes(name):
+    """Parked /note feedback still waiting in the skill's NOTES.md."""
+    f = SKILLS / name / "NOTES.md"
+    return f.read_text(encoding="utf-8").count("- [ ]") if f.is_file() else 0
+
+
 def turn_tokens(usage):
     return sum(usage.get(k) or 0 for k in
                ("input_tokens", "cache_creation_input_tokens", "cache_read_input_tokens", "output_tokens"))
@@ -67,7 +73,7 @@ def collect(days):
     for path in TRANSCRIPTS.glob("*/*.jsonl"):
         active = set()
         try:
-            lines = path.read_text(errors="replace").splitlines()
+            lines = path.read_text(errors="replace", encoding="utf-8").splitlines()
         except OSError:
             continue
         for line in lines:
@@ -99,15 +105,15 @@ def main(argv):
     days = int(argv[argv.index("--days") + 1]) if "--days" in argv else 90
     stats = collect(days)
     names = set(stats) if "--all" in argv else set(own_skills())
-    rows = [{"skill": n, **stats.get(n, {"runs": 0, "tokens": 0, "last": ""})} for n in names]
+    rows = [{"skill": n, **stats.get(n, {"runs": 0, "tokens": 0, "last": ""}), "notes": open_notes(n)} for n in names]
     rows.sort(key=lambda r: (-r["runs"], -r["tokens"], r["skill"]))
     if "--json" in argv:
         print(json.dumps({"days": days, "skills": rows}))
         return 0
     print(f"Skills used in the last {days} days, most used first\n")
-    print(f"{'skill':<26}{'runs':>6}{'tokens':>14}  last used")
+    print(f"{'skill':<26}{'runs':>6}{'tokens':>14}{'notes':>7}  last used")
     for r in rows:
-        print(f"/{r['skill']:<25}{r['runs']:>6}{r['tokens']:>14,}  {r['last'] or '-'}")
+        print(f"/{r['skill']:<25}{r['runs']:>6}{r['tokens']:>14,}{r['notes']:>7}  {r['last'] or '-'}")
     return 0
 
 

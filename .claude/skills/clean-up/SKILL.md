@@ -13,4 +13,5 @@ Self-triggered skill, run with `claude -p` from `os/server.py`. It reports; it n
 2. Caches and trash: size of the trash, `~/Library/Caches` (macOS) or `~/.cache` (Linux), and Downloads older than 60 days.
 3. Apps: the 10 processes using the most CPU and memory right now (`ps aux` sorted), and anything that starts at login.
 4. Write the report to `os/reports/clean-up-YYYY-MM-DD-HHMM.md`: a 3-line summary at the top, then each section as a short table, then up to 5 suggested actions with the space each would free.
+On Windows (Claude Code's Bash is Git Bash): disk with `df -h /c`; caches are `$LOCALAPPDATA/Temp` and the browsers' cache folders under `$LOCALAPPDATA`; processes with `tasklist //fo csv //nh`, ranked by memory (Windows doesn't give CPU there, so say so); login items with `reg query 'HKCU\Software\Microsoft\Windows\CurrentVersion\Run'`.
 5. Don't delete or move anything. Suggested actions are for Issam to approve in a normal chat.

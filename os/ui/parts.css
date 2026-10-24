@@ -1,0 +1,118 @@
+/* youlytics UI parts (ARMS A3). Every local app links this file so they all look the same.
+   Tokens come from brand/brand-book.html (Sapphire Steady). Change a colour there first, then here. */
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+
+:root{
+  --sapphire:#1F3B70; --ink:#142033; --muted:#4F5B6E; --amethyst:#5E4E8C; --amber:#D9962B; --ruby:#9E2B3F;
+  --mist:#F4F6FA; --surface:#FFFFFF; --line:#D3DAE5; --accent:var(--sapphire); --on-accent:#fff;
+  --f-sans:"IBM Plex Sans","Segoe UI",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --radius:10px; --gap:16px; --ok:#2E7476; color-scheme:light dark;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --ink:#E6EBF3; --muted:#A3AEC0; --mist:#0E1726; --surface:#16233A; --line:#2A3A55;
+         --accent:#8FA9DA; --on-accent:#0E1726; --ruby:#E07A8C; --amethyst:#A89AD6; --ok:#6CC0BE; }
+}
+
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+body{margin:0;background:var(--mist);color:var(--ink);font:15px/1.5 var(--f-sans)}
+a{color:var(--accent)}
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.ui-skip{position:absolute;left:8px;top:-48px;background:var(--surface);color:var(--accent);padding:8px 12px;border-radius:8px;z-index:10}
+.ui-skip:focus{top:8px}
+[tabindex="-1"]:focus{outline:none}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important;scroll-behavior:auto !important}}
+
+/* Nav: the same top bar in every app, the current page marked */
+.ui-nav{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:0 0 -4px}
+.ui-nav .brand{display:inline-flex;gap:8px;align-items:center;font-weight:600;margin-right:12px;color:var(--ink);text-decoration:none}
+.ui-nav .brand svg{width:22px;height:22px}
+@media (max-width:420px){ .ui-nav .brand{margin-right:4px} .ui-nav .brand span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)} .ui-nav a.tab{padding:6px 8px} }
+.ui-nav a.tab{padding:6px 10px;border-radius:8px;text-decoration:none;color:var(--muted);font-size:14px;min-height:32px;display:inline-flex;align-items:center}
+.ui-nav a.tab:hover{color:var(--ink);background:var(--surface)}
+.ui-nav a.tab[aria-current=page]{color:var(--ink);background:var(--surface);box-shadow:inset 0 -2px 0 var(--accent)}
+code{font-family:var(--f-mono);font-size:.92em}
+.ui-page{max-width:960px;margin:0 auto;padding:32px 16px 96px;display:grid;gap:var(--gap)}
+.ui-header{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.ui-header h1{margin:0;font-size:26px;font-weight:600}
+.ui-sub{color:var(--muted);font-size:14px;margin:0}
+.ui-label{font:500 12px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.ui-grid{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.ui-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ui-check{display:flex;gap:8px;align-items:flex-start} .ui-check input{margin:4px 0 0;width:16px;height:16px;flex:none}
+
+/* Card: the base of every part */
+.ui-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:grid;gap:10px;align-content:start}
+.ui-card h3,.ui-card h2{margin:0;font-size:16px;font-weight:600}
+.ui-card p{margin:0}
+.ui-card.is-picked{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.ui-card.is-done{opacity:.6}
+
+/* Buttons */
+.ui-btn{font:500 14px var(--f-sans);min-height:36px;padding:7px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.ui-btn:hover{border-color:var(--accent)}
+.ui-btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ui-btn.highlight{background:var(--amber);border-color:var(--amber);color:#142033} /* one per view */
+.ui-btn.quiet{border-color:transparent;background:none;color:var(--accent);padding:4px 8px;min-height:32px}
+.ui-btn.small{min-height:30px;padding:4px 10px;font-size:13px}
+.ui-btn:disabled{opacity:.5;cursor:default}
+
+/* Tags and badges */
+.ui-tag{display:inline-block;font:500 11px var(--f-mono);text-transform:uppercase;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:var(--mist);color:var(--muted);border:1px solid var(--line)}
+.ui-tag.routine{color:var(--accent)} .ui-tag.skill{color:var(--amethyst)} .ui-tag.memory{color:var(--muted)}
+.ui-tag.alert{color:var(--ruby);border-color:var(--ruby)}
+.ui-badge{background:var(--amber);color:#142033;border-radius:999px;padding:1px 8px;font:500 12px var(--f-mono)}
+
+/* Facts: small label/value pairs inside a card */
+.ui-facts{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14px;margin:0}
+.ui-facts dt{color:var(--muted)} .ui-facts dd{margin:0}
+
+/* Review card: one item to approve, change or skip */
+.ui-review .ui-verdicts{display:flex;gap:6px;flex-wrap:wrap}
+.ui-review .ui-verdicts .ui-btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.ui-review .ui-verdicts .ui-btn.change[aria-pressed="true"]{background:var(--amethyst);border-color:var(--amethyst)}
+.ui-review .ui-verdicts .ui-btn.skip[aria-pressed="true"]{background:var(--muted);border-color:var(--muted)}
+.ui-review pre:focus-visible{outline:2px solid var(--accent)}
+.ui-review pre{margin:0;white-space:pre-wrap;font:13px/1.5 var(--f-mono);background:var(--mist);border-radius:8px;padding:10px;max-height:320px;overflow:auto}
+
+/* Comment box */
+.ui-comment{width:100%;min-height:64px;resize:vertical;font:14px/1.5 var(--f-sans);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.ui-comment:focus{outline:2px solid var(--accent);outline-offset:1px}
+
+/* Cart: a bar fixed to the bottom with what you picked and a copy-back button */
+.ui-cart{z-index:5;position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(20,32,51,.08)}
+.ui-cart[hidden]{display:none}
+
+/* Toast */
+/* Stats: a row of at-a-glance numbers, each linking to its section */
+.ui-stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.ui-stat{display:grid;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;text-decoration:none;color:var(--ink)}
+.ui-stat:hover{border-color:var(--accent)}
+.ui-stat .v{font:600 22px/1.2 var(--f-sans)} .ui-stat .k{font-size:13px;color:var(--muted)}
+.ui-stat.attention{border-left:4px solid var(--amber)} .ui-stat.alert{border-left:4px solid var(--ruby)}
+
+/* Rows: a list that stays readable on a phone (instead of a wide table) */
+.ui-rows{list-style:none;margin:0;padding:0;display:grid}
+.ui-rows > li{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:10px 0;border-top:1px solid var(--line)}
+.ui-rows > li:first-child{border-top:0}
+.ui-rows .main{display:grid;gap:2px;min-width:200px;flex:1}
+.ui-rows .meta{font-size:13px;color:var(--muted)}
+.ui-num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.ui-status{font-size:13px;display:inline-flex;gap:6px;align-items:center}
+.ui-status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.ui-status.ok::before{background:var(--ok)} .ui-status.bad{color:var(--ruby)} .ui-status.bad::before{background:var(--ruby)}
+.ui-status.busy::before{background:var(--amber)}
+
+/* Tables scroll inside their card on small screens */
+.ui-scroll{overflow-x:auto}
+.ui-table{border-collapse:collapse;width:100%;font-size:14px}
+.ui-table th,.ui-table td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.ui-table th{font:500 12px var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.ui-table td.n,.ui-table th.n{text-align:right}
+
+.ui-toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--mist);padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+.ui-toast.on{opacity:1}
+
+.ui-empty{color:var(--muted);text-align:center;padding:32px 8px}
+@media (max-width:520px){ .ui-header h1{font-size:22px} }

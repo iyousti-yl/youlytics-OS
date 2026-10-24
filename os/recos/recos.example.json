@@ -1,0 +1,51 @@
+{
+  "week": "example",
+  "made": "2026-10-23 08:00",
+  "summary": "Example cards, so you can try the page before the first Friday run. Run /suggest-routines for real ones.",
+  "cards": [
+    {
+      "id": "sap-release-watch",
+      "section": "routine",
+      "title": "SAP release-note watch",
+      "what": "Checks the BW/4HANA, Datasphere and SAP Analytics Cloud release notes and flags anything that changes how a client's reports work.",
+      "when": "weekly mon 08:00",
+      "saves": "About 30 minutes a week",
+      "evidence": "4 times (Mon, Tue, Thu, Fri): \"anything new in datasphere this week?\"",
+      "mode": "passive",
+      "cap_usd_week": 1.0,
+      "setup": "Add a passive routine 'sap-release-watch' to os/routines/routines.json: weekly mon 08:00, haiku, low effort, tools Read + WebSearch + WebFetch, cap $1. Flag only notes that change BW/4HANA, Datasphere or SAC behaviour for a client in business/clients/."
+    },
+    {
+      "id": "timesheet-friday",
+      "section": "routine",
+      "title": "Friday timesheet draft",
+      "what": "Drafts the week's hours per client from the week's sessions and client notes, for you to check and send.",
+      "when": "weekly fri 16:00",
+      "saves": "About 20 minutes a week",
+      "evidence": "3 Fridays in a row: \"help me fill in my hours for this week\"",
+      "mode": "active",
+      "cap_usd_week": 1.0,
+      "setup": "Add an active routine 'timesheet-friday' to os/routines/routines.json: weekly fri 16:00, haiku, low effort, tools Read + Glob + Bash(python3 os/recos/collect.py:*), cap $1. Output a table of hours per client and day."
+    },
+    {
+      "id": "proposal-skill",
+      "section": "skill",
+      "title": "/proposal for SAP analytics offers",
+      "what": "Turns a client brief into a proposal in the youlytics format: scope, phases, days, price, risks.",
+      "when": "When a new lead comes in",
+      "saves": "About an hour per proposal",
+      "evidence": "3 times: \"write a proposal for the SAC migration at ...\"",
+      "setup": "Make a /proposal skill (sonnet) from business/offers/: it reads the brief, uses the latest proposal as the template, and writes to business/clients/<client>/proposal.md. Pin the brand from brand/brand-book.html for the PDF version."
+    },
+    {
+      "id": "invoice-language",
+      "section": "memory",
+      "title": "Invoices are in Dutch, emails in English",
+      "what": "You corrected the language of an invoice twice. Save it so it sticks.",
+      "when": "Once",
+      "saves": "One correction per invoice",
+      "evidence": "2 corrections (Tue, Thu): \"no, invoices in Dutch please\"",
+      "setup": "Run /calibrate: invoices and anything for Belgian clients' finance teams are written in Dutch; emails and proposals in English unless the client writes in Dutch. Save to memory/ and link it from business/finance/."
+    }
+  ]
+}

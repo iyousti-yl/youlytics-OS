@@ -40,11 +40,11 @@ SKILLS = ROOT / ".claude" / "skills"
 
 
 def load_config():
-    return json.loads(CONFIG.read_text())
+    return json.loads(CONFIG.read_text(encoding="utf-8"))
 
 
 def save_config(cfg):
-    CONFIG.write_text(json.dumps(cfg, indent=2) + "\n")
+    CONFIG.write_text(json.dumps(cfg, indent=2) + "\n", encoding="utf-8")
 
 
 KEYS = {"openai": ("OPENAI_API_KEY", "openai"), "jev": ("OPENROUTER_API_KEY", "openrouter")}
@@ -58,14 +58,14 @@ def api_key(provider):
         return key
     env = ROOT / ".env"
     if env.is_file():
-        for line in env.read_text().splitlines():
+        for line in env.read_text(encoding="utf-8").splitlines():
             if line.strip().startswith(var + "="):
                 key = line.split("=", 1)[1].strip().strip('"').strip("'")
                 if key:
                     return key
     keyfile = Path.home() / ".config" / folder / "key"
     if keyfile.is_file():
-        return keyfile.read_text().strip()
+        return keyfile.read_text(encoding="utf-8").strip()
     return ""
 
 
@@ -128,7 +128,7 @@ def ask_claude(prompt, cfg, _key):
         ["claude", "-p", text, "--model", cc.get("model", "haiku"), "--output-format", "json",
          "--max-turns", "1"],
         # Run outside the repo so no CLAUDE.md is loaded into the routing call.
-        cwd=tempfile.gettempdir(), stdin=subprocess.DEVNULL, capture_output=True, text=True,
+        cwd=tempfile.gettempdir(), stdin=subprocess.DEVNULL, capture_output=True, text=True, encoding="utf-8", errors="replace",
         timeout=cc.get("timeout_seconds", 45),
     )
     data = json.loads(out.stdout)
@@ -146,7 +146,7 @@ def pinned(prompt, cfg):
     skill = SKILLS / m.group(1) / "SKILL.md"
     if not skill.is_file():
         return None
-    text = skill.read_text()
+    text = skill.read_text(encoding="utf-8")
     front = text.split("---", 2)[1] if text.startswith("---") else ""
     model = re.search(r"^model:\s*(\S+)", front, re.M)
     if not model or model.group(1) not in cfg["models"]:
@@ -214,7 +214,7 @@ def route(prompt):
     pick["ms"] = round((time.monotonic() - started) * 1000)
     if cfg.get("log", True):
         entry = {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"), "chars": len(prompt), **pick}
-        with open(LOG, "a") as f:
+        with open(LOG, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
     return pick
 
@@ -222,7 +222,7 @@ def route(prompt):
 def stats():
     if not LOG.is_file():
         return {"calls": 0}
-    rows = [json.loads(l) for l in LOG.read_text().splitlines() if l.strip()]
+    rows = [json.loads(l) for l in LOG.read_text(encoding="utf-8").splitlines() if l.strip()]
     jev = [r for r in rows if r.get("source") in PROVIDERS]
     by_model = {}
     for r in rows:
